@@ -1,30 +1,35 @@
 # UNDRDR — Under the Radar
 
-A curated collection of **683 GitHub AI repositories** that deserve more eyes. Focused on projects under 1,000 stars — the hidden gems before they explode.
+683 open source repos worth watching. All under 1,000 stars at time of discovery.
 
-## 🌐 Live Dashboard
+**[See the graph](https://akakika.com/undrdr/graph)**
 
-**[akakika.com/undrdr](https://akakika.com/undrdr)**
+## What's inside
 
-## What's Inside
+- **Graph** — Force-directed network of all repos. Bubbles cluster by language. Color shows heat (boss → hot → warm → cold). Zoom, drag, hover. Built with Pixi.js for speed.
+- **Dashboard** — Search, filter, sort. Good for targeted browsing.
+- **Categories**
+  - 🔥 Boss — must-watch, potential breakout
+  - 🔴 Hot — fast momentum, high signal
+  - 🟡 Warm — steady growth, worth following
+  - 🔵 Cold — early stage, high potential
 
-- **dashboard.html** — Self-contained interactive dashboard with search, filtering, and sorting
-- **repos_data.json** — Top 100 repos with full metadata
-- **all_repos.json** — Complete dataset of 683 repositories
+## Data
 
-## Categories
-
-| Temp | Description |
+| File | What's in it |
 |------|-------------|
-| 🔥 Boss | Must-watch, potential breakout |
-| 🔴 Hot | Fast momentum, high signal |
-| 🟡 Warm | Steady growth, worth following |
-| 🔵 Cold | Early stage, high potential ceiling |
+| `repos_data.json` | Top 100 repos with metadata |
+| `all_repos.json` | Full set of 683 repos |
 
-## Data Sources
+## Run locally
 
-Manually curated from GitHub's AI/ML ecosystem. Updated periodically.
+```bash
+npm install
+npm run dev
+```
 
-## Tags
+Open [localhost:3777](http://localhost:3777).
 
-`ai` `machine-learning` `github` `curation` `discovery` `developer-tools` `open-source` `repos` `under-the-radar`
+## Why this exists
+
+Most interesting repos are buried under the noise. This is a living map — built to surface the projects that aren't on Product Hunt yet.
