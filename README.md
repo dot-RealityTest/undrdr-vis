@@ -271,7 +271,7 @@ This is a **living map** — built to surface projects that aren't on Product Hu
 
 ## 📄 License
 
-**Private** — All rights reserved to KIKA.
+**Private — All rights reserved to KIKA.**
 
 ---
 
