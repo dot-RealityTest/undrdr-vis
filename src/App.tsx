@@ -1,199 +1,360 @@
-import { useState } from 'react'
-import GraphCanvas from './components/GraphCanvas'
-import Tooltip from './components/Tooltip'
-import Legend from './components/Legend'
-import { type Repo } from './types'
+import { useEffect, useMemo, useState } from 'react'
+import './App.css'
 
-// Demo data until we wire the API
-const DEMO_REPOS: Repo[] = [
-  { url: 'https://github.com/Arthur-Ficial/apfel', name: 'apfel', description: 'The free AI already on your Mac. On-device Apple FoundationModels CLI + OpenAI-compatible server.', why: '', stars: 387, lang: 'Swift', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/Arthur-Ficial/apfel-chat', name: 'apfel-chat', description: 'Multi-conversation macOS chat client. Streaming markdown, speech I/O, 100% on-device.', why: '', stars: 42, lang: 'Swift', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/Arthur-Ficial/apfel-clip', name: 'apfel-clip', description: 'AI clipboard actions from the macOS menu bar. Summarize, translate, rewrite.', why: '', stars: 28, lang: 'Swift', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/Arthur-Ficial/apfel-quick', name: 'apfel-quick', description: 'Instant AI overlay for macOS. Press a key, ask anything, get an on-device answer.', why: '', stars: 19, lang: 'Swift', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/Arthur-Ficial/apfelpad', name: 'apfelpad', description: 'A formula notepad for thinking. On-device AI as a first-class function you can call inline.', why: '', stars: 15, lang: 'Swift', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/Arthur-Ficial/apfel-mcp', name: 'apfel-mcp', description: 'Token-budget-optimized MCP servers for apfel. url-fetch, ddg-search, search-and-fetch.', why: '', stars: 31, lang: 'Python', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/Arthur-Ficial/apfel-gui', name: 'apfel-gui', description: 'Native SwiftUI debug inspector for apfel. Request timeline, MCP protocol viewer, chat.', why: '', stars: 12, lang: 'Swift', temperature: 'cold', temperatures: ['cold'] },
-  { url: 'https://github.com/Lethe044/hermes-skill-marketplace', name: 'hermes-skill-marketplace', description: 'Self-evolving Hermes agent that writes, tests, and publishes reusable Skills autonomously.', why: '', stars: 4, lang: 'Python', temperature: 'cold', temperatures: ['cold'] },
-  { url: 'https://github.com/sharkdp/fd', name: 'fd', description: 'A simple, fast and user-friendly alternative to find.', why: '', stars: 3456, lang: 'Rust', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/astral-sh/uv', name: 'uv', description: 'An extremely fast Python package and project manager, written in Rust.', why: '', stars: 4567, lang: 'Rust', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/zsh-users/zsh-syntax-highlighting', name: 'zsh-syntax-highlighting', description: 'Fish shell-like syntax highlighting for Zsh.', why: '', stars: 890, lang: 'Shell', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/python-cmd2/cmd2', name: 'cmd2', description: 'A tool for building command line interactive apps.', why: '', stars: 684, lang: 'Python', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/charmbracelet/bubbletea', name: 'bubbletea', description: 'A powerful little TUI framework for Go.', why: '', stars: 29876, lang: 'Go', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/typst/typst', name: 'typst', description: 'A markup-based typesetting system.', why: '', stars: 35421, lang: 'Rust', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/denoland/deno', name: 'deno', description: 'A modern runtime for JavaScript and TypeScript.', why: '', stars: 98765, lang: 'Rust', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/Schniz/fnm', name: 'fnm', description: 'Fast and simple Node.js version manager.', why: '', stars: 17999, lang: 'Rust', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/ajeetdsouza/zoxide', name: 'zoxide', description: 'Smarter cd command, inspired by z.', why: '', stars: 8234, lang: 'Rust', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/BurntSushi/ripgrep', name: 'ripgrep', description: 'Recursively searches directories for a regex pattern.', why: '', stars: 52999, lang: 'Rust', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/Wilfred/difftastic', name: 'difftastic', description: 'A structural diff that understands syntax.', why: '', stars: 21199, lang: 'Rust', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/imsnif/bandwhich', name: 'bandwhich', description: 'Terminal bandwidth utilization tool.', why: '', stars: 9786, lang: 'Rust', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/nushell/nushell', name: 'nushell', description: 'A new type of shell.', why: '', stars: 32100, lang: 'Rust', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/fastapi/fastapi', name: 'fastapi', description: 'Modern fast web framework for building APIs with Python.', why: '', stars: 82100, lang: 'Python', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/pallets/flask', name: 'flask', description: 'The Python micro framework for building web applications.', why: '', stars: 68500, lang: 'Python', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/home-assistant/core', name: 'home-assistant', description: 'Open source home automation that puts local control and privacy first.', why: '', stars: 75600, lang: 'Python', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/obsidianmd/obsidian-api', name: 'obsidian-api', description: 'API for Obsidian plugins.', why: '', stars: 1200, lang: 'TypeScript', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/floatingpip/ComfyUI', name: 'ComfyUI', description: 'The most powerful and modular stable diffusion GUI and backend.', why: '', stars: 72100, lang: 'Python', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/tldraw/tldraw', name: 'tldraw', description: 'A very good whiteboard app.', why: '', stars: 43200, lang: 'TypeScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/n8n-io/n8n', name: 'n8n', description: 'Workflow automation for technical folks.', why: '', stars: 67800, lang: 'TypeScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/ollama/ollama', name: 'ollama', description: 'Get up and running with Llama 3, Mistral, and other LLMs locally.', why: '', stars: 138000, lang: 'Go', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/open-webui/open-webui', name: 'open-webui', description: 'User-friendly AI frontend for Ollama. Self-hosted, offline-capable.', why: '', stars: 88000, lang: 'Svelte', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/ggml-org/llama.cpp', name: 'llama.cpp', description: 'LLM inference in C/C++. The original.', why: '', stars: 76100, lang: 'C++', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/vercel/next.js', name: 'next.js', description: 'The React Framework for the Web.', why: '', stars: 131000, lang: 'JavaScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/vitejs/vite', name: 'vite', description: 'Next generation frontend tooling.', why: '', stars: 72400, lang: 'TypeScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/sveltejs/svelte', name: 'svelte', description: 'Cybernetically enhanced web apps.', why: '', stars: 81900, lang: 'JavaScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/tailwindlabs/tailwindcss', name: 'tailwindcss', description: 'A utility-first CSS framework for rapid UI development.', why: '', stars: 86900, lang: 'TypeScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/pmndrs/zustand', name: 'zustand', description: 'Bear necessities for state management in React.', why: '', stars: 50500, lang: 'TypeScript', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/tanstack/query', name: 'tanstack-query', description: 'Powerful asynchronous state management for JS.', why: '', stars: 43500, lang: 'TypeScript', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/pmndrs/react-spring', name: 'react-spring', description: 'Spring-physics based animation library for React.', why: '', stars: 29100, lang: 'TypeScript', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/framer/motion', name: 'motion', description: 'Open source, production-ready animation library for React.', why: '', stars: 26700, lang: 'TypeScript', temperature: 'hot', temperatures: ['hot'] },
-  { url: 'https://github.com/radix-ui/primitives', name: 'radix-ui', description: 'Radix Primitives — unstyled, accessible components for React.', why: '', stars: 15800, lang: 'TypeScript', temperature: 'warm', temperatures: ['warm'] },
-  { url: 'https://github.com/supabase/supabase', name: 'supabase', description: 'The open source Firebase alternative.', why: '', stars: 81200, lang: 'TypeScript', temperature: 'boss', temperatures: ['boss'] },
-  { url: 'https://github.com/neo4j/neo4j', name: 'neo4j', description: 'Graphs for Everyone — the world\'s leading graph database.', why: '', stars: 13600, lang: 'Java', temperature: 'warm', temperatures: ['warm'] },
-]
+type Repo = {
+  name: string
+  full_name: string
+  description?: string
+  stars: number
+  forks?: number
+  language?: string | null
+  topics?: string[]
+  tags?: string[]
+  title?: string
+  url: string
+  owner?: string
+  license?: string | null
+  updated_at?: string
+  pushed_at?: string
+  category?: string
+  wave?: string
+  is_gem?: boolean
+}
+
+type SortMode = 'signal' | 'stars' | 'updated' | 'name'
+type ViewMode = 'list' | 'cards' | 'grid' | 'random'
+
+const palette = ['#6D80A6', '#A66D80', '#80A66D', '#404040', '#8C8C8C']
+const TRENDING_KEYWORDS = ['ai agents', 'mcp', 'local-first', 'macos', 'llm', 'automation', 'rust', 'cli', 'developer-tools', 'self-hosted']
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Mac Tool': '#3B82F6',
+  'Apple Intelligence': '#3B82F6',
+  'Apple ML': '#60A5FA',
+  'MLX / Apple ML': '#60A5FA',
+  'Apple NLP': '#60A5FA',
+  'App Intents': '#93C5FD',
+  'AI Agent': '#8B5CF6',
+  'Multi-Agent': '#8B5CF6',
+  'Hermes Agent': '#A78BFA',
+  'Self-Evolving AI': '#A78BFA',
+  'Agent Builder': '#C4B5FD',
+  'Proactive Agent': '#C4B5FD',
+  'Computer Use': '#8B5CF6',
+  'Browser Agent': '#8B5CF6',
+  'Planning': '#8B5CF6',
+  'Reasoning': '#8B5CF6',
+  'MCP Server': '#14B8A6',
+  'Self-Hosted': '#2DD4BF',
+  'Data AI': '#5EEAD4',
+  'Local LLM': '#99F6E4',
+  'Dev Tools': '#F97316',
+  'CLI Tool': '#FB923C',
+  'TUI / Terminal': '#FDBA74',
+  'Tool Use': '#FED7AA',
+  'Prompt Tools': '#FED7AA',
+  'Productivity AI': '#FB923C',
+  'AI Video': '#EC4899',
+  'AI Music': '#F472B6',
+  'AI + 3D': '#F9A8D4',
+  'Creative Code': '#FBCFE8',
+  'Design AI': '#FBCFE8',
+  'Generative Art': '#FCE7F3',
+  'Voice / Audio': '#F9A8D4',
+  'WebGL / 3D': '#06B6D4',
+  'Game Engine': '#22D3EE',
+  'AR / XR': '#67E8F9',
+  'Simulation': '#A5F3FC',
+  'Privacy / Security': '#EF4444',
+  'Security AI': '#F87171',
+  'RAG / Memory': '#22C55E',
+  'Vision AI': '#EAB308',
+  'MoE / Mix': '#6366F1',
+  'Gemma / Google': '#818CF8',
+  'Experimental': '#6B7280',
+  'Robotics': '#9CA3AF',
+  'Unsorted': '#8C8C8C',
+}
+
+function categoryColor(category?: string) {
+  return CATEGORY_COLORS[category || 'Unsorted'] || '#8C8C8C'
+}
+
+function formatNumber(value = 0) {
+  if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
+  return String(value)
+}
+
+function daysSince(date?: string) {
+  if (!date) return 9999
+  return Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / 86400000))
+}
+
+function signalScore(repo: Repo) {
+  const recent = Math.max(0, 365 - daysSince(repo.pushed_at || repo.updated_at))
+  const lowStarBonus = repo.stars < 1000 ? 250 : 0
+  const gemBonus = repo.is_gem ? 400 : 0
+  return recent + lowStarBonus + gemBonus + Math.min(repo.stars, 1000) / 6
+}
+
+function uniq(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b))
+}
 
 function App() {
-  const [repos] = useState<Repo[]>(DEMO_REPOS)
-  const [highlightedTemp, setHighlightedTemp] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [hoveredRepo, setHoveredRepo] = useState<Repo | null>(null)
-  const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null)
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  const [repos, setRepos] = useState<Repo[]>([])
+  const [query, setQuery] = useState('')
+  const [language, setLanguage] = useState('all')
+  const [category, setCategory] = useState('all')
+  const [wave, setWave] = useState('all')
+  const [sort, setSort] = useState<SortMode>('signal')
+  const [active, setActive] = useState<Repo | null>(null)
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('undrdr:favorites') || '[]') } catch { return [] }
+  })
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [randomSeed, setRandomSeed] = useState(0)
 
-  // Group repos by language for clustering
-  const languageGroups: Record<string, Repo[]> = {}
-  for (const repo of repos) {
-    const lang = repo.lang || 'unknown'
-    if (!languageGroups[lang]) languageGroups[lang] = []
-    languageGroups[lang].push(repo)
+  useEffect(() => {
+    fetch('./data/all_repos.json')
+      .then((res) => res.json())
+      .then((data: Repo[]) => setRepos(data))
+      .catch(() => setRepos([]))
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('undrdr:favorites', JSON.stringify(favorites))
+  }, [favorites])
+
+  const toggleFavorite = (repo: Repo) => {
+    const key = repo.full_name || repo.url
+    setFavorites((items) => items.includes(key) ? items.filter((item) => item !== key) : [...items, key])
   }
 
-  const handleHover = (repo: Repo | null) => {
-    setHoveredRepo(repo)
-    if (repo) {
-      setTooltipPos({ x: mousePos.x, y: mousePos.y })
-    }
-  }
+  const languages = useMemo(() => uniq(repos.map((repo) => repo.language || 'Unknown')), [repos])
+  const categories = useMemo(() => uniq(repos.map((repo) => repo.category || 'Unsorted')), [repos])
+  const waves = useMemo(() => uniq(repos.map((repo) => repo.wave || 'unmarked')), [repos])
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY })
-    if (hoveredRepo) {
-      setTooltipPos({ x: e.clientX, y: e.clientY })
-    }
-  }
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const list = repos.filter((repo) => {
+      const haystack = [repo.title, repo.name, repo.full_name, repo.description, repo.language, repo.category, repo.wave, ...(repo.tags || repo.topics || [])]
+        .join(' ')
+        .toLowerCase()
+      const key = repo.full_name || repo.url
+      return (!showFavoritesOnly || favorites.includes(key))
+        && (!q || haystack.includes(q))
+        && (language === 'all' || (repo.language || 'Unknown') === language)
+        && (category === 'all' || (repo.category || 'Unsorted') === category)
+        && (wave === 'all' || (repo.wave || 'unmarked') === wave)
+    })
 
-  const tempCounts = {
-    boss: repos.filter(r => r.temperature === 'boss').length,
-    hot: repos.filter(r => r.temperature === 'hot').length,
-    warm: repos.filter(r => r.temperature === 'warm').length,
-    cold: repos.filter(r => r.temperature === 'cold').length,
-  }
+    return list.sort((a, b) => {
+      if (sort === 'stars') return b.stars - a.stars
+      if (sort === 'updated') return daysSince(a.pushed_at || a.updated_at) - daysSince(b.pushed_at || b.updated_at)
+      if (sort === 'name') return a.name.localeCompare(b.name)
+      return signalScore(b) - signalScore(a)
+    })
+  }, [repos, query, language, category, wave, sort, showFavoritesOnly, favorites])
+
+  const randomRepo = useMemo(() => {
+    if (!filtered.length) return null
+    return filtered[Math.abs(randomSeed) % filtered.length]
+  }, [filtered, randomSeed])
+
+  const stats = useMemo(() => ({
+    total: repos.length,
+    under1k: repos.filter((repo) => repo.stars < 1000).length,
+    gems: repos.filter((repo) => repo.is_gem).length,
+    languages: languages.length,
+    favorites: favorites.length,
+  }), [repos, languages.length, favorites.length])
+
+  const topTopics = useMemo(() => {
+    const counts = new Map<string, number>()
+    repos.forEach((repo) => (repo.tags || repo.topics || []).forEach((topic) => counts.set(topic, (counts.get(topic) || 0) + 1)))
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 14)
+  }, [repos])
+
+  const featured = useMemo(() => filtered.slice(0, 3), [filtered])
+  const trendingKeywords = useMemo(() => TRENDING_KEYWORDS.map((item) => {
+    const needle = item.toLowerCase()
+    const count = repos.filter((repo) => [repo.title, repo.name, repo.full_name, repo.description, repo.language, repo.category, repo.wave, ...(repo.tags || repo.topics || [])].join(' ').toLowerCase().includes(needle)).length
+    return { name: item, count }
+  }).sort((a, b) => b.count - a.count), [repos])
 
   return (
-    <div className="app" onMouseMove={handleMouseMove}>
-      <div className="header">
-        <div className="logo">UNDR<span>DR</span></div>
-        <div className="stats">
-          <span><span className="stat-value">{repos.length}</span> repos</span>
-          <span><span className="stat-value">{Object.keys(languageGroups).length}</span> languages</span>
-          <span><span className="stat-value">{tempCounts.boss}</span> boss</span>
-          <span><span className="stat-value">{tempCounts.hot}</span> hot</span>
+    <main className="shell">
+      <nav className="topbar">
+        <a className="brand" href="/">KIKA/</a>
+        <span className="system">for people who think in systems</span>
+        <div className="navlinks">
+          <a href="/">APPS</a>
+          <a href="/">ABOUT</a>
+          <a href="/undrdr/">UNDRDR</a>
+          <a href="/">BLOG</a>
+          <a href="https://github.com/dot-RealityTest" target="_blank" rel="noreferrer">GITHUB</a>
         </div>
-      </div>
+      </nav>
 
-      <div className="search-container">
-        <span className="search-icon">⌕</span>
-        <input
-          className="search-input"
-          type="text"
-          placeholder="Search repos, languages..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-      </div>
+      <section className="hero">
+        <div className="heroTitle">
+          <p className="kicker">OPEN SOURCE / UNDER THE RADAR</p>
+          <h1>UNDRDR</h1>
+          <div className="heroRule" />
+        </div>
 
-      <Legend
-        repos={repos}
-        highlightedTemp={highlightedTemp}
-        onHighlight={setHighlightedTemp}
-      />
+      </section>
 
-      <GraphCanvas
-        repos={repos}
-        languageGroups={languageGroups}
-        highlightedTemp={highlightedTemp}
-        searchQuery={searchQuery}
-        onSelectRepo={setSelectedRepo}
-        hoveredRepo={hoveredRepo}
-        onHoverRepo={handleHover}
-      />
+      <section className="statsGrid">
+        <Stat label="repos indexed" value={stats.total} />
+        <Stat label="under 1k stars" value={stats.under1k} />
+        <Stat label="marked gems" value={stats.gems} />
+        <Stat label="languages" value={stats.languages} />
+        <Stat label={showFavoritesOnly ? "showing liked" : "favorites"} value={stats.favorites} onClick={() => setShowFavoritesOnly((value) => !value)} active={showFavoritesOnly} />
+      </section>
 
-      <Tooltip
-        repo={hoveredRepo}
-        x={tooltipPos.x}
-        y={tooltipPos.y}
-      />
+      <section className="controls">
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search repo, owner, topic, language…" />
+        <Select label="Language" value={language} values={languages} onChange={setLanguage} />
+        <Select label="Category" value={category} values={categories} onChange={setCategory} />
+        <Select label="Wave" value={wave} values={waves} onChange={setWave} />
+        <select value={sort} onChange={(event) => setSort(event.target.value as SortMode)}>
+          <option value="signal">sort / signal</option>
+          <option value="stars">sort / stars</option>
+          <option value="updated">sort / updated</option>
+          <option value="name">sort / name</option>
+        </select>
+      </section>
 
-      {selectedRepo && (
-        <div style={{
-          position: 'fixed',
-          bottom: 32,
-          right: 32,
-          zIndex: 100,
-          background: '#16162580',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(16, 185, 129, 0.2)',
-          borderRadius: 16,
-          padding: 20,
-          maxWidth: 300,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+      <section className="topics">
+        <div className="topicLabel">TOPIC SIGNALS</div>
+        {topTopics.map(([topic, count], index) => (
+          <button key={topic} style={{ '--tone': palette[index % palette.length] } as React.CSSProperties} onClick={() => setQuery(topic)}>
+            {topic}<span>{count}</span>
+          </button>
+        ))}
+      </section>
+
+      <section className="featureGrid">
+        {featured.map((repo, index) => (
+          <a className="featureCard" href={repo.url} target="_blank" rel="noreferrer" key={repo.full_name} style={{ '--cat-color': categoryColor(repo.category) } as React.CSSProperties}>
+            <span className="featureIndex">0{index + 1}</span>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 16 }}>{selectedRepo.name}</div>
-              <div style={{ fontSize: 12, color: '#64748b', fontFamily: 'JetBrains Mono' }}>
-                {selectedRepo.url.replace('https://github.com/', '')}
+              <p style={{ color: categoryColor(repo.category) }}>{repo.category || 'Hidden Gem'}</p>
+              <h3>{repo.title || repo.name}</h3>
+              <span>{repo.description || 'No description.'}</span>
+            </div>
+            <footer><strong>★ {formatNumber(repo.stars)}</strong><em>{repo.language || 'Unknown'}</em></footer>
+          </a>
+        ))}
+      </section>
+
+      <section className="languageStrip trendStrip">
+        {trendingKeywords.map((item, index) => (
+          <button key={item.name} onClick={() => setQuery(item.name)} className={query.toLowerCase() === item.name.toLowerCase() ? 'active' : ''}>
+            <span>{String(index + 1).padStart(2, '0')}</span>{item.name}<b>{item.count}</b>
+          </button>
+        ))}
+      </section>
+
+      <section className="viewSwitch">
+        {(['list', 'cards', 'grid', 'random'] as ViewMode[]).map((mode) => (
+          <button key={mode} className={viewMode === mode ? 'active' : ''} onClick={() => { setViewMode(mode); if (mode === 'random') setRandomSeed(Math.floor(Math.random() * Math.max(filtered.length, 1))) }}>
+            {mode}
+          </button>
+        ))}
+        {viewMode === 'random' && <button className="shuffle" onClick={() => setRandomSeed(Math.floor(Math.random() * Math.max(filtered.length, 1)))}>shuffle</button>}
+      </section>
+
+      <section className="listHeader">
+        <div><p className="kicker">LIVE FILTER</p><h2>{viewMode === 'random' ? 'RANDOM' : 'INDEX'}</h2></div>
+        <p>{filtered.length} results / {showFavoritesOnly ? "liked" : sort} / {viewMode}</p>
+      </section>
+
+      {viewMode === 'random' && randomRepo ? (
+        <section className="randomView">
+          <article className="randomCard" style={{ '--cat-color': categoryColor(randomRepo.category) } as React.CSSProperties}>
+            <p className="kicker">SURPRISE REPO</p>
+            <h3>{randomRepo.title || randomRepo.name}</h3>
+            <p>{randomRepo.description}</p>
+            <div className="metaLine">
+              <span>{randomRepo.language || 'Unknown'}</span>
+              <span style={{ borderColor: categoryColor(randomRepo.category), color: categoryColor(randomRepo.category), background: categoryColor(randomRepo.category) + '18' }}>{randomRepo.category || 'Unsorted'}</span>
+              <span>★ {formatNumber(randomRepo.stars)}</span>
+            </div>
+            <div className="randomActions">
+              <a href={randomRepo.url} target="_blank" rel="noreferrer">open repo →</a>
+              <button onClick={() => toggleFavorite(randomRepo)}>{favorites.includes(randomRepo.full_name || randomRepo.url) ? 'liked ♥' : 'like ♡'}</button>
+              <button onClick={() => setRandomSeed(Math.floor(Math.random() * Math.max(filtered.length, 1)))}>another random</button>
+            </div>
+          </article>
+        </section>
+      ) : (
+      <section className={`repoList ${viewMode}`}>
+        {filtered.map((repo, index) => (
+          <article key={repo.full_name} className={`repoRow ${repo.is_gem ? 'gem' : ''}`} style={{ '--cat-color': categoryColor(repo.category) } as React.CSSProperties} onMouseEnter={() => setActive(repo)} onMouseLeave={() => setActive(null)}>
+            <span className="count">#{String(index + 1).padStart(3, '0')}</span>
+            <span className="heat" style={{ '--score': `${Math.min(100, Math.round(signalScore(repo) / 10))}%` } as React.CSSProperties} />
+            <div className="repoMain">
+              <div className="titleLine">
+                <a href={repo.url} target="_blank" rel="noreferrer">{repo.title || repo.name}</a>
+                <button
+                  className={`favorite ${favorites.includes(repo.full_name || repo.url) ? 'active' : ''}`}
+                  onClick={(event) => { event.preventDefault(); event.stopPropagation(); toggleFavorite(repo) }}
+                  aria-label={favorites.includes(repo.full_name || repo.url) ? 'Remove favorite' : 'Add favorite'}
+                  title={favorites.includes(repo.full_name || repo.url) ? 'Remove favorite' : 'Add favorite'}
+                >♥</button>
+              </div>
+              <p>{repo.description || 'No description.'}</p>
+              <div className="metaLine">
+                <span>{repo.language || 'Unknown'}</span>
+                <span className="catBadge" style={{ borderColor: categoryColor(repo.category), color: categoryColor(repo.category), background: categoryColor(repo.category) + '18' }}>{repo.category || 'Unsorted'}</span>
+                <span>{(repo.tags || repo.topics || [])[0] || repo.wave || 'tagged'}</span>
               </div>
             </div>
-            <button
-              onClick={() => setSelectedRepo(null)}
-              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
-            >
-              ×
-            </button>
-          </div>
-          {selectedRepo.description && (
-            <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 8, lineHeight: 1.5 }}>
-              {selectedRepo.description}
+            <div className="repoStats">
+              <span>★ {formatNumber(repo.stars)}</span>
+              <span>⑂ {formatNumber(repo.forks || 0)}</span>
+              <span>{daysSince(repo.pushed_at || repo.updated_at)}d</span>
             </div>
-          )}
-          <div style={{ display: 'flex', gap: 16, marginTop: 10, fontSize: 12, fontFamily: 'JetBrains Mono' }}>
-            <span style={{ color: '#f59e0b' }}>★ {selectedRepo.stars >= 1000 ? `${(selectedRepo.stars/1000).toFixed(1)}k` : selectedRepo.stars}</span>
-            <span style={{ color: '#3b82f6' }}>{selectedRepo.lang}</span>
-            <span style={{ color: getTempColor(selectedRepo.temperature), textTransform: 'uppercase', fontWeight: 600 }}>
-              {selectedRepo.temperature}
-            </span>
-          </div>
-          <a
-            href={selectedRepo.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: 'block', marginTop: 12, color: '#10b981', fontSize: 12, textDecoration: 'none', fontFamily: 'JetBrains Mono' }}
-          >
-            Open on GitHub →
-          </a>
-        </div>
+          </article>
+        ))}
+      </section>
       )}
-    </div>
+
+      <aside className={`detail ${active ? 'visible' : ''}`}>
+        {active && (
+          <>
+            <p className="kicker">CURRENT HOVER</p>
+            <h3>{active.title || active.name}</h3>
+            <p>{active.description}</p>
+            <div className="detailMeta">
+              <span>{active.full_name}</span>
+              <span>★ {formatNumber(active.stars)}</span>
+              <span>{active.license || 'no license data'}</span>
+              <span>{favorites.includes(active.full_name || active.url) ? 'favorited' : 'not favorited'}</span>
+            </div>
+          </>
+        )}
+      </aside>
+    </main>
   )
 }
 
-function getTempColor(temp: string): string {
-  const colors: Record<string, string> = {
-    boss: '#f59e0b',
-    hot: '#10b981',
-    warm: '#3b82f6',
-    cold: '#475569',
-  }
-  return colors[temp] || colors.cold
+function Stat({ label, value, onClick, active }: { label: string; value: number; onClick?: () => void; active?: boolean }) {
+  const Tag = onClick ? 'button' : 'div'
+  return <Tag className={`stat ${onClick ? 'clickable' : ''} ${active ? 'active' : ''}`} onClick={onClick as any}><strong>{formatNumber(value)}</strong><span>{label}</span></Tag>
+}
+
+function Select({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) {
+  return (
+    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+      <option value="all">{label} / all</option>
+      {values.map((item) => <option key={item} value={item}>{item}</option>)}
+    </select>
+  )
 }
 
 export default App
