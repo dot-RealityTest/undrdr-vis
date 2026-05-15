@@ -689,17 +689,22 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
   const starDelta = repo.dailyStarDelta || 0
   const weeklyDelta = repo.weeklyStarDelta || 0
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
+  const deltaLabel = starDelta > 0 ? `+${formatNumber(starDelta)} today` : 'No new stars today'
 
   return (
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
       <aside className="repo-detail" aria-label={`${repo.displayName} details`} onClick={(event) => event.stopPropagation()}>
-        <div className="detail-topline">
-          <span className="status-badge">{repo.statusLabel}</span>
+        <div className="detail-topline" style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}>
+          <span className="detail-status">{repo.statusLabel}</span>
           <button type="button" onClick={onClose}>Close</button>
         </div>
         <div className="detail-hero">
           <p>{repo.ownerName}/{repo.name}</p>
           <h2>{repo.displayName}</h2>
+          <div className="detail-signal">
+            <strong>{repo.statusReason}</strong>
+            <span>{deltaLabel}</span>
+          </div>
           <span>{repo.description || 'No description available yet.'}</span>
         </div>
         <div className="detail-actions">
@@ -723,7 +728,7 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
           <Definition title="Language" detail={repo.language || 'Unknown'} />
           <Definition title="First seen" detail={formatDate(repo.firstSeen)} />
           <Definition title="Last updated" detail={formatDate(repo.lastUpdated)} />
-          <Definition title="Why it matters" detail={repo.statusReason} />
+          <Definition title="Threshold" detail={repo.stars >= 1000 ? 'Graduated from underrated' : `${formatNumber(Math.max(0, 1000 - repo.stars))} stars from 1K`} />
         </div>
         <div className="detail-tags">
           {repo.allTopics.length ? repo.allTopics.map((item) => <span key={item}>{item}</span>) : <span>No topics yet</span>}
