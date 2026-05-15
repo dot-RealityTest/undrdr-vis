@@ -46,7 +46,7 @@ jobs:
       - name: Open snapshot update PR
         id: snapshot-pr
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.UND_RDR_BOT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           BRANCH="automation/github-repo-snapshot"
           git config user.name "github-actions[bot]"
