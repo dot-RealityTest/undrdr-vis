@@ -452,6 +452,9 @@ textarea {
 }
 
 .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--status-color, var(--blue));
 }
 
@@ -480,6 +483,57 @@ textarea {
   display: block;
 }
 
+.signal-icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.github-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.signal-system {
+  max-width: 1480px;
+  margin: 12px auto 0;
+  padding: 0 clamp(18px, 4vw, 56px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.signal-system-label,
+.signal-system div,
+.signal-system span {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.signal-system-label {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.signal-system div {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.signal-system div span {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.58);
+}
+
 .favorite-button:hover:not(:disabled),
 .favorite-button.active {
   border-color: var(--ink);
@@ -499,6 +553,31 @@ textarea {
   font-weight: 850;
   word-break: break-word;
   text-wrap: balance;
+}
+
+.repo-identity {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.repo-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--status-color, var(--blue)) 28%, var(--line));
+  background: color-mix(in srgb, var(--status-color, var(--blue)) 9%, var(--paper));
+  color: var(--status-color, var(--blue));
+}
+
+.repo-icon .signal-icon {
+  width: 17px;
+  height: 17px;
 }
 
 .button-link {
@@ -522,6 +601,9 @@ textarea {
   font-size: 13px;
   line-height: 1.35;
   overflow-wrap: anywhere;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .repo-description {
@@ -600,9 +682,25 @@ textarea {
 }
 
 .repo-list .repo-title {
-  margin-top: 9px;
+  margin-top: 0;
   font-size: 18px;
   line-height: 1.15;
+}
+
+.repo-list .repo-identity {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.repo-list .repo-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.repo-list .repo-icon .signal-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .repo-list .repo-owner {
@@ -692,6 +790,9 @@ textarea {
   font-size: 14px;
   font-weight: 820;
   word-break: break-word;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .detail-hero h2 {
@@ -702,6 +803,26 @@ textarea {
   letter-spacing: 0;
   word-break: break-word;
   text-wrap: balance;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.detail-icon {
+  width: clamp(38px, 5vw, 52px);
+  height: clamp(38px, 5vw, 52px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--status-color, var(--blue)) 28%, var(--line));
+  background: color-mix(in srgb, var(--status-color, var(--blue)) 9%, var(--paper));
+  color: var(--status-color, var(--blue));
+}
+
+.detail-icon .signal-icon {
+  width: 48%;
+  height: 48%;
 }
 
 .detail-signal {
@@ -770,6 +891,7 @@ textarea {
   border-right: 1px solid var(--line);
   background: transparent;
   white-space: nowrap;
+  gap: 7px;
 }
 
 .detail-actions button:last-child {
@@ -927,15 +1049,22 @@ textarea {
 .related-repos button {
   min-height: 82px;
   padding: 10px 12px;
+  position: relative;
 }
 
 .related-repos span {
   color: var(--status-color, var(--blue));
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .related-repos em {
   margin-top: 5px;
   color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .detail-tags {
@@ -1343,6 +1472,15 @@ textarea {
     width: 100%;
   }
 
+  .signal-system {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .signal-system div {
+    justify-content: flex-start;
+  }
+
   .hero {
     padding-top: 42px;
   }
@@ -1368,6 +1506,10 @@ textarea {
 
   .repo-detail {
     width: 100vw;
+  }
+
+  .detail-hero h2 {
+    grid-template-columns: 1fr;
   }
 
   .filter-grid,

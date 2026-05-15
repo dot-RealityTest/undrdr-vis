@@ -97,6 +97,16 @@ const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
 ]
 
 const STATUS_OPTIONS: Array<'all' | RepoStatus> = ['all', 'Underrated', 'Rising', 'Near 1K', 'Crossed 1K', 'Archived/Inactive']
+type SignalIconName = 'agent' | 'mcp' | 'apple' | 'cli' | 'local' | 'automation' | 'security' | 'web' | 'data' | 'repo' | 'github'
+const SIGNAL_KEY: Array<{ icon: SignalIconName; label: string }> = [
+  { icon: 'agent', label: 'Agents' },
+  { icon: 'local', label: 'Local AI' },
+  { icon: 'apple', label: 'Apple' },
+  { icon: 'cli', label: 'CLI' },
+  { icon: 'web', label: 'Web' },
+  { icon: 'security', label: 'Security' },
+  { icon: 'data', label: 'Data' },
+]
 
 function formatNumber(value = 0) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
@@ -158,6 +168,20 @@ function statusReason(status: RepoStatus) {
   if (status === 'Rising') return 'Star growth or curated momentum signal'
   if (status === 'Archived/Inactive') return 'Repository appears unavailable or inactive'
   return 'Still below 1,000 stars'
+}
+
+function repoSignalIcon(repo: RepoView): SignalIconName {
+  const text = [repo.displayName, repo.description, repo.language, ...repo.allTopics].join(' ').toLowerCase()
+  if (/(mcp|model-context-protocol)/.test(text)) return 'mcp'
+  if (/(agent|claude|codex|openclaw|multi-agent|autonomous)/.test(text)) return 'agent'
+  if (/(macos|swift|swiftui|apple|ios|xcode)/.test(text)) return 'apple'
+  if (/(cli|terminal|command|shell|tui)/.test(text)) return 'cli'
+  if (/(local|ollama|llm|privacy|self-hosted|offline)/.test(text)) return 'local'
+  if (/(automation|workflow|scheduler|pipeline)/.test(text)) return 'automation'
+  if (/(security|audit|pentest|auth|vulnerability)/.test(text)) return 'security'
+  if (/(react|web|frontend|next|html|css|dashboard)/.test(text)) return 'web'
+  if (/(data|ml|machine-learning|analytics|rag|vector)/.test(text)) return 'data'
+  return 'repo'
 }
 
 function inferStatus(repo: Repo): { label: RepoStatus; reason: string } {
@@ -402,6 +426,8 @@ function App() {
         <Metric label="Near 1K" value={stats.near} />
         <Metric label="Crossed 1K" value={stats.crossed} />
       </section>
+
+      <SignalSystem />
 
       <StatusBanner loadState={loadState} duplicateCount={duplicates.length} />
 
@@ -657,6 +683,22 @@ function SectionHeader({ eyebrow, title, detail }: { eyebrow: string; title: str
   )
 }
 
+function SignalSystem() {
+  return (
+    <section className="signal-system" aria-label="Repository signal key">
+      <span className="signal-system-label"><SignalIcon name="github" /> GitHub signal set</span>
+      <div>
+        {SIGNAL_KEY.map((item) => (
+          <span key={item.label}>
+            <SignalIcon name={item.icon} />
+            {item.label}
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function RepoGrid({ repos, favoriteIds, isLoggedIn, onSelectRepo, onToggleFavorite, emptyTitle, emptyDetail }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void; emptyTitle: string; emptyDetail: string }) {
   if (!repos.length) return <StateBlock title={emptyTitle} detail={emptyDetail} />
   return (
@@ -708,11 +750,12 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onSelectRepo, onToggleFavori
 function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
   const favoriteAriaLabel = isLoggedIn ? `${isFavorite ? 'Remove saved repo' : 'Save repo'}: ${repo.displayName}` : `Log in to save ${repo.displayName}`
+  const iconName = repoSignalIcon(repo)
 
   return (
     <article className={`repo-card ${compact ? 'compact' : ''}`} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}>
       <div className="card-topline">
-        <span className="status-badge">{repo.statusLabel}</span>
+        <span className="status-badge">{!compact && <SignalIcon name={iconName} />}{repo.statusLabel}</span>
         <span className="card-actions">
           <span>{repo.language || 'Unknown'}</span>
           <button
@@ -727,8 +770,13 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
           </button>
         </span>
       </div>
-      <button className="repo-title button-link" type="button" onClick={() => onSelectRepo(repo.id)}>{repo.displayName}</button>
-      <p className="repo-owner">{repo.ownerName}/{repo.name}</p>
+      <div className="repo-identity">
+        <span className="repo-icon" aria-hidden="true"><SignalIcon name={iconName} /></span>
+        <div>
+          <button className="repo-title button-link" type="button" onClick={() => onSelectRepo(repo.id)}>{repo.displayName}</button>
+          <p className="repo-owner"><SignalIcon name="github" />{repo.ownerName}/{repo.name}</p>
+        </div>
+      </div>
       {!compact && <p className="repo-description">{repo.description || 'No description available yet.'}</p>}
       {!compact && (
         <div className="repo-tags">
@@ -753,11 +801,33 @@ function StarIcon({ filled = false }: { filled?: boolean }) {
   )
 }
 
+function SignalIcon({ name }: { name: SignalIconName }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  const filled = { fill: 'currentColor' }
+
+  return (
+    <svg className={`signal-icon ${name === 'github' ? 'github-icon' : ''}`} viewBox="0 0 24 24" aria-hidden="true">
+      {name === 'github' && <path {...filled} d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.53v-2.06c-3.08.67-3.73-1.31-3.73-1.31-.5-1.28-1.23-1.62-1.23-1.62-1-.68.08-.67.08-.67 1.11.08 1.69 1.14 1.69 1.14.99 1.69 2.59 1.2 3.22.92.1-.72.39-1.2.7-1.48-2.46-.28-5.05-1.23-5.05-5.47 0-1.21.43-2.2 1.14-2.97-.11-.28-.49-1.41.11-2.93 0 0 .93-.3 3.05 1.13A10.58 10.58 0 0 1 12 6.3c.94 0 1.88.13 2.77.38 2.12-1.43 3.05-1.13 3.05-1.13.6 1.52.22 2.65.11 2.93.71.77 1.14 1.76 1.14 2.97 0 4.25-2.59 5.18-5.06 5.46.4.35.75 1.02.75 2.06V22c0 .29.2.64.76.53A11.1 11.1 0 0 0 12 .9Z" />}
+      {name === 'agent' && <><path {...common} d="M7 8h10v8H7z" /><path {...common} d="M9 8V5h6v3M9.5 11h.01M14.5 11h.01M10 14h4M4 11h3M17 11h3" /></>}
+      {name === 'mcp' && <><path {...common} d="M8 7.5 12 5l4 2.5v5L12 15l-4-2.5z" /><path {...common} d="M4 16.5 8 14l4 2.5v5L8 24l-4-2.5zM12 16.5 16 14l4 2.5v5L16 24l-4-2.5z" transform="translate(0 -2)" /></>}
+      {name === 'apple' && <><path {...common} d="M15 4c-.8.6-1.4 1.4-1.5 2.5M12.2 7.2c-2.7-1.4-6.2.5-6.2 4.5 0 3.8 2.7 7.3 4.4 7.3.8 0 1.1-.5 2.1-.5s1.3.5 2.1.5c1.4 0 3.4-2.7 3.4-5.2-2-.8-2.5-3.6-.4-5.1-1.1-1.4-3-1.9-5.4-1.5Z" /></>}
+      {name === 'cli' && <><path {...common} d="M4 6h16v12H4zM7 10l2 2-2 2M11 14h4" /></>}
+      {name === 'local' && <><path {...common} d="M12 21s7-5.3 7-11a7 7 0 0 0-14 0c0 5.7 7 11 7 11Z" /><circle {...common} cx="12" cy="10" r="2.5" /></>}
+      {name === 'automation' && <><path {...common} d="M5 12a7 7 0 0 1 12-5M19 12a7 7 0 0 1-12 5" /><path {...common} d="M17 4v4h-4M7 20v-4h4" /></>}
+      {name === 'security' && <><path {...common} d="M12 3 19 6v5c0 4.4-2.8 7.6-7 10-4.2-2.4-7-5.6-7-10V6z" /><path {...common} d="m9.5 12 1.8 1.8 3.5-4" /></>}
+      {name === 'web' && <><circle {...common} cx="12" cy="12" r="8" /><path {...common} d="M4 12h16M12 4c2 2.2 3 4.9 3 8s-1 5.8-3 8M12 4c-2 2.2-3 4.9-3 8s1 5.8 3 8" /></>}
+      {name === 'data' && <><ellipse {...common} cx="12" cy="6" rx="6" ry="3" /><path {...common} d="M6 6v6c0 1.7 2.7 3 6 3s6-1.3 6-3V6M6 12v6c0 1.7 2.7 3 6 3s6-1.3 6-3v-6" /></>}
+      {name === 'repo' && <><path {...common} d="M7 4h8l3 3v13H7z" /><path {...common} d="M15 4v4h4M9.5 12h5M9.5 16h5" /></>}
+    </svg>
+  )
+}
+
 function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavorite, onSelectRepo, previousRepo, nextRepo, relatedRepos }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onClose: () => void; onToggleFavorite: (repoId: string) => void; onSelectRepo: (repoId: string) => void; previousRepo: RepoView | null; nextRepo: RepoView | null; relatedRepos: RepoView[] }) {
   const starDelta = repo.dailyStarDelta || 0
   const weeklyDelta = repo.weeklyStarDelta || 0
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
   const deltaLabel = starDelta > 0 ? `+${formatNumber(starDelta)} today` : 'No new stars today'
+  const iconName = repoSignalIcon(repo)
 
   return (
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
@@ -767,8 +837,8 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
           <button type="button" onClick={onClose}>Close</button>
         </div>
         <div className="detail-hero">
-          <p>{repo.ownerName}/{repo.name}</p>
-          <h2>{repo.displayName}</h2>
+          <p><SignalIcon name="github" />{repo.ownerName}/{repo.name}</p>
+          <h2><span className="detail-icon" aria-hidden="true"><SignalIcon name={iconName} /></span>{repo.displayName}</h2>
           <div className="detail-signal">
             <strong>{repo.statusReason}</strong>
             <span>{deltaLabel}</span>
@@ -776,7 +846,7 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
           <span className="detail-description">{repo.description || 'No description available yet.'}</span>
         </div>
         <div className="detail-actions">
-          <a href={repo.repoUrl} target="_blank" rel="noreferrer">Open on GitHub</a>
+          <a href={repo.repoUrl} target="_blank" rel="noreferrer"><SignalIcon name="github" />Open on GitHub</a>
           <button
             className={`favorite-button ${isFavorite ? 'active' : ''}`}
             type="button"
@@ -810,10 +880,10 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
           {relatedRepos.length > 0 && (
             <div className="related-repos">
               {relatedRepos.map((related) => (
-                <button key={related.id} type="button" onClick={() => onSelectRepo(related.id)}>
-                  <span>{related.statusLabel}</span>
+                <button key={related.id} type="button" onClick={() => onSelectRepo(related.id)} style={{ '--status-color': statusColor(related.statusLabel) } as CSSProperties}>
+                  <span><SignalIcon name={repoSignalIcon(related)} />{related.statusLabel}</span>
                   <strong>{related.displayName}</strong>
-                  <em>{related.language || 'Unknown'} · {formatNumber(related.stars)} stars</em>
+                  <em><SignalIcon name="github" />{related.language || 'Unknown'} · {formatNumber(related.stars)} stars</em>
                 </button>
               ))}
             </div>
