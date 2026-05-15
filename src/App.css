@@ -432,7 +432,7 @@ textarea {
   padding: 12px 14px;
   border-left-width: 2px;
   background: rgba(255, 255, 255, 0.72);
-  contain-intrinsic-size: 188px;
+  contain-intrinsic-size: 128px;
 }
 
 .repo-list .repo-card.compact:hover {
@@ -599,30 +599,8 @@ textarea {
   font-size: 12px;
 }
 
-.repo-list .repo-description {
-  margin-top: 10px;
-  font-size: 13px;
-  line-height: 1.42;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.repo-list .repo-tags {
-  gap: 5px;
-  margin-top: 10px;
-  max-height: 23px;
-  overflow: hidden;
-}
-
-.repo-list .repo-tags span {
-  padding: 4px 7px;
-  font-size: 11px;
-}
-
 .repo-list .card-footer {
-  padding-top: 12px;
+  padding-top: 14px;
 }
 
 .repo-list .details-button {

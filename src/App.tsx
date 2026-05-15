@@ -701,10 +701,12 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
       </div>
       <button className="repo-title button-link" type="button" onClick={() => onSelectRepo(repo.id)}>{repo.displayName}</button>
       <p className="repo-owner">{repo.ownerName}/{repo.name}</p>
-      <p className="repo-description">{repo.description || 'No description available yet.'}</p>
-      <div className="repo-tags">
-        {repo.allTopics.slice(0, compact ? 4 : 6).map((item) => <span key={item}>{item}</span>)}
-      </div>
+      {!compact && <p className="repo-description">{repo.description || 'No description available yet.'}</p>}
+      {!compact && (
+        <div className="repo-tags">
+          {repo.allTopics.slice(0, 6).map((item) => <span key={item}>{item}</span>)}
+        </div>
+      )}
       <div className="card-footer">
         <strong>{formatNumber(repo.stars)} stars</strong>
         <span>Updated {formatDate(repo.lastUpdated)}</span>
