@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent } from 'react'
 import './App.css'
 
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
-type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'submit' | 'about'
+type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'favorites' | 'submit' | 'about'
 type SortMode = 'curated' | 'stars' | 'newest' | 'rising' | 'updated' | 'closest'
 
 type Repo = {
@@ -80,6 +80,10 @@ type MockSubmission = {
   submittedAt: string
 }
 
+type MockUser = {
+  name: string
+}
+
 const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'discover', label: 'Discover' },
   { id: 'new', label: 'New' },
@@ -87,6 +91,7 @@ const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'near', label: 'Near 1K' },
   { id: 'crossed', label: 'Crossed 1K' },
   { id: 'topics', label: 'Topics' },
+  { id: 'favorites', label: 'Favorites' },
   { id: 'submit', label: 'Submit' },
   { id: 'about', label: 'About' },
 ]
@@ -121,6 +126,30 @@ function normalizeSlug(value?: string) {
 
 function uniq(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b))
+}
+
+function readStoredArray<T>(key: string) {
+  if (typeof window === 'undefined') return []
+  const stored = window.localStorage.getItem(key)
+  if (!stored) return []
+  try {
+    const parsed = JSON.parse(stored)
+    return Array.isArray(parsed) ? parsed as T[] : []
+  } catch {
+    return []
+  }
+}
+
+function readStoredUser() {
+  if (typeof window === 'undefined') return null
+  const stored = window.localStorage.getItem('undrdr-mock-user')
+  if (!stored) return null
+  try {
+    const parsed = JSON.parse(stored)
+    return typeof parsed?.name === 'string' ? parsed as MockUser : null
+  } catch {
+    return null
+  }
 }
 
 function statusReason(status: RepoStatus) {
@@ -173,17 +202,9 @@ function normalizeRepo(repo: Repo): RepoView {
 function App() {
   const [repos, setRepos] = useState<RepoView[]>([])
   const [report, setReport] = useState<UpdateReport | null>(null)
-  const [submissions, setSubmissions] = useState<MockSubmission[]>(() => {
-    if (typeof window === 'undefined') return []
-    const stored = window.localStorage.getItem('undrdr-mock-submissions')
-    if (!stored) return []
-    try {
-      const parsed = JSON.parse(stored)
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  })
+  const [submissions, setSubmissions] = useState<MockSubmission[]>(() => readStoredArray<MockSubmission>('undrdr-mock-submissions'))
+  const [mockUser, setMockUser] = useState<MockUser | null>(() => readStoredUser())
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readStoredArray<string>('undrdr-mock-favorites'))
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('all')
@@ -271,6 +292,8 @@ function App() {
   const crossed = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Crossed 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
   const trendingTopics = topics.slice(0, 14)
   const repoIds = useMemo(() => new Set(repos.map((repo) => repo.id)), [repos])
+  const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds])
+  const favoriteRepos = useMemo(() => repos.filter((repo) => favoriteSet.has(repo.id)), [repos, favoriteSet])
 
   function handleMockSubmit(submission: MockSubmission) {
     const next = [submission, ...submissions].slice(0, 20)
@@ -283,6 +306,26 @@ function App() {
     window.localStorage.removeItem('undrdr-mock-submissions')
   }
 
+  function mockSignIn() {
+    const user = { name: 'Mock member' }
+    setMockUser(user)
+    window.localStorage.setItem('undrdr-mock-user', JSON.stringify(user))
+  }
+
+  function mockSignOut() {
+    setMockUser(null)
+    setFavoriteIds([])
+    window.localStorage.removeItem('undrdr-mock-user')
+    window.localStorage.removeItem('undrdr-mock-favorites')
+  }
+
+  function toggleFavorite(repoId: string) {
+    if (!mockUser) return
+    const next = favoriteSet.has(repoId) ? favoriteIds.filter((id) => id !== repoId) : [repoId, ...favoriteIds]
+    setFavoriteIds(next)
+    window.localStorage.setItem('undrdr-mock-favorites', JSON.stringify(next))
+  }
+
   return (
     <main className="app-shell">
       <header className="site-header">
@@ -290,6 +333,7 @@ function App() {
         <nav aria-label="Primary navigation">
           {NAV_ITEMS.map((item) => <a key={item.id} href={`#${item.id}`}>{item.label}</a>)}
         </nav>
+        <AuthControl user={mockUser} favoriteCount={favoriteIds.length} onSignIn={mockSignIn} onSignOut={mockSignOut} />
       </header>
 
       <section className="hero" id="discover">
@@ -333,7 +377,7 @@ function App() {
       <UpdateReportPanel report={report} />
 
       <SectionHeader eyebrow="Featured" title="Curated Underrated Repos" detail="High-signal projects from the current dataset." />
-      <RepoGrid repos={featured} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
+      <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
 
       <section className="split-sections">
         <RepoRail id="new" title="Newest Additions" repos={newest} />
@@ -357,6 +401,19 @@ function App() {
 
       <SubmitRepoSection existingRepoIds={repoIds} submissions={submissions} onClear={clearMockSubmissions} onSubmit={handleMockSubmit} />
 
+      <section className="favorites-section" id="favorites" aria-label="Favorite repositories">
+        <div className="index-heading">
+          <div>
+            <p>Saved</p>
+            <h2>{mockUser ? `${favoriteRepos.length} favorites` : 'Favorites require login'}</h2>
+          </div>
+          {!mockUser && <button className="reset-button" onClick={mockSignIn}>Mock login</button>}
+        </div>
+        {!mockUser && <StateBlock title="Log in to favorite repos" detail="Favorites are personal, so this mock keeps them behind a local sign-in state." />}
+        {mockUser && favoriteRepos.length === 0 && <StateBlock title="No favorites yet" detail="Use the Save button on repo cards to build your personal watchlist." />}
+        {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onToggleFavorite={toggleFavorite} />}
+      </section>
+
       <section className="index-section" aria-label="Repository index">
         <div className="index-heading">
           <div>
@@ -369,7 +426,7 @@ function App() {
         {loadState === 'loading' && <StateBlock title="Loading repo data" detail="Reading the local UND-RDR repository dataset." />}
         {loadState === 'error' && <StateBlock title="Could not load repo data" detail="The app could not read public/data/all_repos.json. The backup copy is preserved in backups/." />}
         {loadState === 'ready' && filtered.length === 0 && <StateBlock title="No results after filters" detail="Try a broader topic, status, or language." />}
-        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={filtered.slice(0, 80)} />}
+        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={filtered.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onToggleFavorite={toggleFavorite} />}
       </section>
 
       <section className="about-section" id="about">
@@ -393,6 +450,19 @@ function StatusBanner({ loadState, duplicateCount }: { loadState: LoadState; dup
   if (loadState === 'error') return <div className="status-banner error">Failed GitHub update/data load. Showing no repos until the local JSON is available.</div>
   if (duplicateCount > 0) return <div className="status-banner warning">Duplicate repo detected: {duplicateCount} duplicate id group{duplicateCount === 1 ? '' : 's'} need review.</div>
   return <div className="status-banner">Fresh GitHub snapshot loaded. Daily scheduler is prepared, but not connected yet.</div>
+}
+
+function AuthControl({ user, favoriteCount, onSignIn, onSignOut }: { user: MockUser | null; favoriteCount: number; onSignIn: () => void; onSignOut: () => void }) {
+  if (!user) {
+    return <button className="auth-button" onClick={onSignIn}>Mock login</button>
+  }
+
+  return (
+    <div className="auth-control">
+      <a href="#favorites">{favoriteCount} saved</a>
+      <button onClick={onSignOut}>Log out</button>
+    </div>
+  )
 }
 
 function UpdateReportPanel({ report }: { report: UpdateReport | null }) {
@@ -519,9 +589,21 @@ function SectionHeader({ eyebrow, title, detail }: { eyebrow: string; title: str
   )
 }
 
-function RepoGrid({ repos, emptyTitle, emptyDetail }: { repos: RepoView[]; emptyTitle: string; emptyDetail: string }) {
+function RepoGrid({ repos, favoriteIds, isLoggedIn, onToggleFavorite, emptyTitle, emptyDetail }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onToggleFavorite: (repoId: string) => void; emptyTitle: string; emptyDetail: string }) {
   if (!repos.length) return <StateBlock title={emptyTitle} detail={emptyDetail} />
-  return <section className="repo-grid">{repos.map((repo) => <RepoCard key={repo.id} repo={repo} />)}</section>
+  return (
+    <section className="repo-grid">
+      {repos.map((repo) => (
+        <RepoCard
+          key={repo.id}
+          repo={repo}
+          isFavorite={favoriteIds.has(repo.id)}
+          isLoggedIn={isLoggedIn}
+          onToggleFavorite={onToggleFavorite}
+        />
+      ))}
+    </section>
+  )
 }
 
 function RepoRail({ id, title, repos, emptyDetail = 'This section is ready for daily automation signals.' }: { id: SectionId; title: string; repos: RepoView[]; emptyDetail?: string }) {
@@ -536,20 +618,42 @@ function RepoRail({ id, title, repos, emptyDetail = 'This section is ready for d
   )
 }
 
-function RepoList({ repos }: { repos: RepoView[] }) {
+function RepoList({ repos, favoriteIds, isLoggedIn, onToggleFavorite }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onToggleFavorite: (repoId: string) => void }) {
   return (
     <div className="repo-list">
-      {repos.map((repo) => <RepoCard key={repo.id} repo={repo} compact />)}
+      {repos.map((repo) => (
+        <RepoCard
+          key={repo.id}
+          repo={repo}
+          compact
+          isFavorite={favoriteIds.has(repo.id)}
+          isLoggedIn={isLoggedIn}
+          onToggleFavorite={onToggleFavorite}
+        />
+      ))}
     </div>
   )
 }
 
-function RepoCard({ repo, compact = false }: { repo: RepoView; compact?: boolean }) {
+function RepoCard({ repo, isFavorite, isLoggedIn, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
+  const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
+
   return (
     <article className={`repo-card ${compact ? 'compact' : ''}`} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}>
       <div className="card-topline">
         <span className="status-badge">{repo.statusLabel}</span>
-        <span>{repo.language || 'Unknown'}</span>
+        <span className="card-actions">
+          <span>{repo.language || 'Unknown'}</span>
+          <button
+            className={`favorite-button ${isFavorite ? 'active' : ''}`}
+            type="button"
+            onClick={() => onToggleFavorite(repo.id)}
+            disabled={!isLoggedIn}
+            title={isLoggedIn ? favoriteLabel : 'Mock login before saving favorites'}
+          >
+            {favoriteLabel}
+          </button>
+        </span>
       </div>
       <a className="repo-title" href={repo.repoUrl} target="_blank" rel="noreferrer">{repo.displayName}</a>
       <p className="repo-owner">{repo.ownerName}/{repo.name}</p>
