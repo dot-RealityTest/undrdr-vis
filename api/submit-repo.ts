@@ -37,6 +37,7 @@ type Delivery = 'github-issue' | 'webhook' | 'email' | 'validated-only'
 const MAX_BODY_BYTES = 16_384
 const MAX_REASON_LENGTH = 900
 const MAX_CONTACT_LENGTH = 160
+const DEFAULT_GITHUB_LABELS = ['undrdr-submission', 'needs-review']
 
 function sendJson(response: ServerResponse, statusCode: number, data: unknown) {
   response.statusCode = statusCode
@@ -115,15 +116,60 @@ async function forwardToWebhook(submission: IntakeSubmission) {
   return true
 }
 
-async function forwardToGitHubIssue(submission: IntakeSubmission) {
+function getGitHubIssueConfig() {
   const token = process.env.SUBMISSIONS_GITHUB_TOKEN
   const targetRepo = process.env.SUBMISSIONS_GITHUB_REPO
-  if (!token || !targetRepo) return null
-
   const labels = (process.env.SUBMISSIONS_GITHUB_LABELS || '')
     .split(',')
     .map((label) => label.trim())
     .filter(Boolean)
+
+  if (!token || !targetRepo) return null
+  return { token, targetRepo, labels: labels.length ? labels : DEFAULT_GITHUB_LABELS }
+}
+
+function gitHubHeaders(token: string) {
+  return {
+    accept: 'application/vnd.github+json',
+    authorization: `Bearer ${token}`,
+    'content-type': 'application/json',
+    'user-agent': 'undrdr-submit-intake',
+    'x-github-api-version': '2022-11-28',
+  }
+}
+
+async function findOpenSubmissionIssue(fullName: string) {
+  const config = getGitHubIssueConfig()
+  if (!config) return null
+
+  const searchUrl = new URL('https://api.github.com/search/issues')
+  const primaryLabel = config.labels[0]
+  const query = [
+    `repo:${config.targetRepo}`,
+    'is:issue',
+    'is:open',
+    'in:title',
+    primaryLabel ? `label:"${primaryLabel}"` : '',
+    `"UND-RDR submission: ${fullName}"`,
+  ].filter(Boolean).join(' ')
+
+  searchUrl.searchParams.set('q', query)
+  searchUrl.searchParams.set('per_page', '1')
+
+  const response = await fetch(searchUrl, {
+    headers: gitHubHeaders(config.token),
+  })
+
+  if (!response.ok) throw new Error(`github-search-${response.status}`)
+
+  const result = await response.json() as { items?: Array<{ html_url?: string; title?: string }> }
+  const issue = result.items?.find((item) => item.title === `UND-RDR submission: ${fullName}`)
+  return issue?.html_url || null
+}
+
+async function forwardToGitHubIssue(submission: IntakeSubmission) {
+  const config = getGitHubIssueConfig()
+  if (!config) return null
 
   const body = [
     'New UND-RDR repository submission.',
@@ -137,19 +183,13 @@ async function forwardToGitHubIssue(submission: IntakeSubmission) {
     'The live dataset was not changed by this submission.',
   ].join('\n')
 
-  const response = await fetch(`https://api.github.com/repos/${targetRepo}/issues`, {
+  const response = await fetch(`https://api.github.com/repos/${config.targetRepo}/issues`, {
     method: 'POST',
-    headers: {
-      accept: 'application/vnd.github+json',
-      authorization: `Bearer ${token}`,
-      'content-type': 'application/json',
-      'user-agent': 'undrdr-submit-intake',
-      'x-github-api-version': '2022-11-28',
-    },
+    headers: gitHubHeaders(config.token),
     body: JSON.stringify({
       title: `UND-RDR submission: ${submission.fullName}`,
       body,
-      ...(labels.length ? { labels } : {}),
+      labels: config.labels,
     }),
   })
 
@@ -222,6 +262,18 @@ export default async function handler(request: IncomingMessage, response: Server
         error: 'duplicate_repo',
         message: `${normalized.fullName} is already in UND-RDR.`,
         repoUrl: normalized.repoUrl,
+      })
+      return
+    }
+
+    const pendingIssueUrl = await findOpenSubmissionIssue(normalized.fullName)
+    if (pendingIssueUrl) {
+      sendJson(response, 409, {
+        ok: false,
+        error: 'pending_submission',
+        message: `${normalized.fullName} is already waiting for review.`,
+        repoUrl: normalized.repoUrl,
+        reviewUrl: pendingIssueUrl,
       })
       return
     }
