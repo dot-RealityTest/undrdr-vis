@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent } from 'react'
 import './App.css'
 
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
-type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'favorites' | 'submit' | 'about'
+type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'favorites' | 'submit' | 'data' | 'about'
 type SortMode = 'curated' | 'stars' | 'newest' | 'rising' | 'updated' | 'closest'
 type DiscoveryModeId = 'surprise' | 'rising' | 'fresh' | 'almost' | 'local' | 'agents' | 'apple'
 
@@ -94,6 +94,7 @@ const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'topics', label: 'Topics' },
   { id: 'favorites', label: 'Watchlist' },
   { id: 'submit', label: 'Submit' },
+  { id: 'data', label: 'Data' },
   { id: 'about', label: 'About' },
 ]
 
@@ -578,6 +579,8 @@ function App() {
         />
       )}
 
+      <MethodSection stats={stats} report={report} duplicateCount={duplicates.length} />
+
       <section className="about-section" id="about">
         <div>
           <p>About UND-RDR</p>
@@ -591,6 +594,32 @@ function App() {
         </div>
       </section>
     </main>
+  )
+}
+
+function MethodSection({ stats, report, duplicateCount }: { stats: { total: number; underOneK: number; rising: number; near: number; crossed: number }; report: UpdateReport | null; duplicateCount: number }) {
+  const freshness = report
+    ? `Latest local GitHub check: ${formatDate(report.checkedAt)} across ${formatNumber(report.checkedCount)} repos.`
+    : 'Daily automation is prepared, but not fully connected yet.'
+
+  return (
+    <section className="method-section" id="data" aria-label="Data and method">
+      <div className="method-intro">
+        <p>Data / Method</p>
+        <h2>The index is protected first, then designed around discovery.</h2>
+        <span>UND-RDR keeps the raw repository snapshot intact while the interface turns it into readable signals: fresh, rising, almost famous, and graduated.</span>
+      </div>
+      <div className="method-grid">
+        <Definition title="Source" detail={`This build reads ${formatNumber(stats.total)} repos from the protected local JSON snapshot. The UI does not rewrite the raw data.`} />
+        <Definition title="Threshold" detail={`${formatNumber(stats.underOneK)} repos are still under 1,000 stars. Repos that cross the line graduate instead of disappearing.`} />
+        <Definition title="Signals" detail={`${formatNumber(stats.rising)} heating up, ${formatNumber(stats.near)} almost famous, and ${formatNumber(stats.crossed)} graduated repos are derived from star counts and growth fields.`} />
+        <Definition title="Freshness" detail={freshness} />
+        <Definition title="Protection" detail={`Validation checks for duplicate IDs and repo loss before changes ship. Current duplicate groups: ${duplicateCount}.`} />
+        <Definition title="Submissions" detail="The submit form is a local mock until undrdr.com and the site email are ready." />
+        <Definition title="Automation" detail="The next backend pass should run a daily GitHub check, update stars, detect 1K crossings, and record growth deltas." />
+        <Definition title="Domain" detail="UND-RDR stays under akaKika for now. The metadata is ready to swap to undrdr.com when the domain is connected." />
+      </div>
+    </section>
   )
 }
 
