@@ -618,15 +618,19 @@ textarea {
 
 .detail-description {
   display: block;
-  max-width: 640px;
-  margin-top: 20px;
-  color: #303532;
-  font-size: clamp(17px, 2vw, 21px);
-  line-height: 1.42;
+  max-width: 690px;
+  margin-top: 22px;
+  padding-left: 18px;
+  border-left: 2px solid var(--ink);
+  color: #222724;
+  font-size: clamp(19px, 2.2vw, 24px);
+  font-weight: 520;
+  line-height: 1.34;
+  text-wrap: pretty;
 }
 
 .detail-actions {
-  margin-top: 28px;
+  margin-top: 24px;
   width: fit-content;
   max-width: 100%;
   display: inline-flex;
