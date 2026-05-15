@@ -31,13 +31,19 @@ This folder now has a standalone Vercel config:
 - Data JSON is served with no-store caching
 - Versioned assets are served with immutable caching
 
-Create or link a Vercel project from this folder only after local checks pass:
+Vercel project:
+
+- Project: `dot-realitytests-projects/undrdr`
+- Default Vercel URL: `https://undrdr.vercel.app/`
+- Inspect URL: `https://vercel.com/dot-realitytests-projects/undrdr`
+
+The project has been created and linked locally. If this checkout is cloned elsewhere, link it again from this folder:
 
 ```bash
-vercel link
+vercel link --yes --project undrdr
 ```
 
-Use a new project name like `undrdr` so it does not replace the existing akaKika project.
+Do not link this folder to the existing akaKika project.
 
 ## Production Environment
 
@@ -51,11 +57,15 @@ VITE_TARGET_DOMAIN=undrdr.com
 VITE_SITE_EMAIL=submit@undrdr.com
 ```
 
+Production environment variables are saved on the Vercel project.
+Preview deployments from this local machine can pass the same values with `--build-env`.
+Branch-specific Preview env vars can be added after the working branch exists on GitHub.
+
 Do not switch DNS until the preview deployment works.
 
 ## Verify Preview
 
-On the Vercel preview URL, check:
+On `https://undrdr.vercel.app/` or a Vercel preview URL, check:
 
 - App loads without console errors.
 - `public/data/all_repos.json` loads and shows 683 repos.
@@ -64,6 +74,14 @@ On the Vercel preview URL, check:
 - Favorites still require mock login.
 - Submit remains a mock queue.
 - Data / Method section mentions the configured target correctly.
+
+Current verified preview:
+
+- `https://undrdr.vercel.app/#favorites`
+- Canonical: `https://undrdr.com/`
+- Repo count shown: `683 repositories`
+- Data endpoint: `/data/all_repos.json` returns `200`
+- Browser console errors: none
 
 ## Connect Domain
 

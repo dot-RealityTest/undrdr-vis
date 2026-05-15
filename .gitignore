@@ -25,3 +25,4 @@ data/github-checks/
 *.njsproj
 *.sln
 *.sw?
+.vercel
