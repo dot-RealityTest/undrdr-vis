@@ -1,291 +1,189 @@
-# 🕵️ UNDRDR — Under the Radar
+# UND-RDR
 
-> **683 open source repos worth watching. All under 1,000 stars at time of discovery.** A living map of hidden gems buried under the noise.
+UND-RDR is a living discovery site for underrated GitHub repositories before they become famous.
 
-[![Live Graph](https://img.shields.io/badge/Live-Graph-0c8ce9?style=for-the-badge&logo=vercel)](https://akakika.com/undrdr/graph)
-[![Website](https://img.shields.io/badge/Website-akakika.com/undrdr-38bdf8?style=for-the-badge&logo=vercel)](https://akakika.com/undrdr/)
-[![Repos](https://img.shields.io/badge/Repos-683-green?style=for-the-badge)](https://akakika.com/undrdr/graph)
-[![License](https://img.shields.io/badge/License-Private-blue?style=for-the-badge)](LICENSE)
+Live site: [https://undrdr.com](https://undrdr.com)
 
----
+It tracks a protected dataset of 683 open source repositories, most discovered while they were under 1,000 stars. The site turns that dataset into a fast, curated browsing system for finding fresh, rising, almost-famous, and graduated projects.
 
-## 🌐 Live
+## What It Does
 
-**Interactive Graph:** [https://akakika.com/undrdr/graph](https://akakika.com/undrdr/graph)  
-**Dashboard:** [https://akakika.com/undrdr/](https://akakika.com/undrdr/)
+- Browse underrated GitHub projects without digging through a random list.
+- Search by repo, owner, description, language, topic, and status.
+- Filter by language, topic, and discovery status.
+- Sort by curated signal, stars, newest, rising, recently updated, and closest to 1K.
+- Track sections for New, Rising, Near 1K, Crossed 1K, Topics, Watchlist, Submit, Data, and About.
+- Open repo cards directly on GitHub.
+- Submit new repos into a protected GitHub issue review queue.
+- Run daily GitHub checks that open review PRs instead of silently changing production data.
 
----
+## Discovery Statuses
 
-## 💡 The Problem
+| Status | Meaning |
+| --- | --- |
+| Underrated | Still under 1,000 stars |
+| Rising | Growing quickly or showing strong momentum |
+| Near 1K | Close to crossing the 1,000-star threshold |
+| Crossed 1K | Graduated from underrated |
+| Archived/Inactive | Unavailable, archived, disabled, or stale |
 
-Most interesting repos are **buried under the noise**.
+## Data Protection
 
-GitHub has millions of repositories. The good stuff gets lost:
-- Hidden by algorithmic feeds
-- Drowned out by corporate projects
-- Too early for Product Hunt
-- Under 1,000 stars (the "invisible threshold")
+The core dataset lives at:
 
-By the time a repo hits 10k stars, everyone knows about it. **The real gems are found earlier.**
-
----
-
-## ✨ The Solution
-
-**UNDRDR** is a living map of 683 open source repos — all under 1,000 stars at time of discovery.
-
-- 🔍 **Force-Directed Graph** — Visual network clustered by language
-- 🎨 **Heat-Based Coloring** — Boss → Hot → Warm → Cold
-- 🔎 **Interactive Exploration** — Zoom, drag, hover for details
-- 📊 **Dashboard** — Search, filter, sort for targeted browsing
-- ⚡ **Pixi.js Powered** — Smooth performance with 683+ nodes
-
----
-
-## 🎯 Repo Categories
-
-| Tier | Icon | Description | Stars Range |
-|------|------|-------------|-------------|
-| **Boss** | 🔥 | Must-watch, potential breakout | 500-999 |
-| **Hot** | 🔴 | Fast momentum, high signal | 200-499 |
-| **Warm** | 🟡 | Steady growth, worth following | 50-199 |
-| **Cold** | 🔵 | Early stage, high potential | <50 |
-
----
-
-## 🎬 How It Works
-
-### 1️⃣ Discovery
-Repos are discovered through:
-- GitHub API queries
-- Community submissions
-- Manual curation
-- Trending analysis
-
-### 2️⃣ Categorization
-Each repo is tagged by "heat":
-- **Boss** — About to breakout
-- **Hot** — Gaining momentum fast
-- **Warm** — Consistent activity
-- **Cold** — Early but promising
-
-### 3️⃣ Visualization
-The graph displays:
-- **Nodes** = Repositories
-- **Node Size** = Relative star count
-- **Node Color** = Heat tier
-- **Clusters** = Language groups
-- **Edges** = Similarity/connections
-
-### 4️⃣ Exploration
-- **Zoom** — Scroll to zoom in/out
-- **Pan** — Drag to move around
-- **Hover** — See repo details
-- **Click** — Open GitHub page
-- **Search** — Find specific repos
-
----
-
-## 🚀 Features
-
-| Feature | Description |
-|---------|-------------|
-| **🕸️ Force-Directed Graph** | Interactive network visualization with physics simulation |
-| **🎨 Heat-Based Coloring** | Visual tier system (Boss/Hot/Warm/Cold) |
-| **🔍 Language Clustering** | Repos auto-group by primary language |
-| **⚡ Pixi.js Rendering** | GPU-accelerated canvas for smooth performance |
-| **📊 Dashboard View** | Traditional list with search and filters |
-| **🏷️ Category Filters** | Filter by heat tier |
-| **🔎 Search** | Full-text search across all repos |
-| **📱 Responsive** | Works on desktop and mobile |
-
----
-
-## 🛠️ Tech Stack
-
-- **React 19** + **TypeScript** — Modern, type-safe UI
-- **Vite** — Fast dev server and optimized builds
-- **Pixi.js** — High-performance 2D rendering engine
-- **D3.js** — Force-directed graph physics
-- **Tailwind CSS** — Clean, responsive design
-- **GitHub API** — Repo metadata and stats
-
----
-
-## 📊 Data Structure
-
-### Data Files
-
-| File | Contents | Count |
-|------|----------|-------|
-| `repos_data.json` | Top 100 repos with full metadata | 100 |
-| `all_repos.json` | Complete dataset | 683 |
-
-### Repo Metadata
-
-Each repo includes:
-```json
-{
-  "name": "repo-name",
-  "owner": "username",
-  "stars": 423,
-  "language": "TypeScript",
-  "category": "Hot",
-  "description": "Short description",
-  "url": "https://github.com/...",
-  "topics": ["react", "typescript", "..."],
-  "lastUpdated": "2026-05-01",
-  "createdAt": "2025-12-15"
-}
+```text
+public/data/all_repos.json
 ```
 
----
+The redesign protects this file as the source of truth:
 
-## 🚀 Quick Start
+- raw repo data is not rewritten by the public UI,
+- submissions do not directly mutate the dataset,
+- accepted submissions go through a reviewer command,
+- daily GitHub refreshes open PRs for review,
+- validation checks repo count, required fields, and duplicate ids.
 
-### Run Locally
+Current validation snapshot:
 
-```bash
-# Clone the repository
-git clone https://github.com/dot-RealityTest/undrdr-vis.git
-cd undrdr-vis
+```text
+repos: 683
+under 1K: 660
+crossed 1K: 23
+duplicate ids: 0
+```
 
-# Install dependencies
+## Submission Workflow
+
+Public submissions go through the live endpoint:
+
+```text
+/api/submit-repo
+```
+
+The endpoint:
+
+- accepts full GitHub repo URLs,
+- blocks invalid URLs,
+- blocks repos already in the dataset,
+- blocks repos already waiting in an open review issue,
+- creates a GitHub issue labeled `undrdr-submission` and `needs-review`,
+- never changes the live dataset directly.
+
+Reviewer guide:
+
+```text
+SUBMISSIONS.md
+```
+
+Preview an accepted issue:
+
+```sh
+npm run submissions:add -- --issue 12 --dry-run
+```
+
+Apply an accepted issue:
+
+```sh
+npm run submissions:add -- --issue 12
+```
+
+The script fetches GitHub metadata, refuses duplicates, writes a backup, appends one normalized repo record, validates data, comments on the issue, and labels it `accepted` plus `added-to-index`.
+
+## Daily Automation
+
+The GitHub Actions workflow at:
+
+```text
+.github/workflows/github-repo-check.yml
+```
+
+runs daily and can also be triggered manually. It checks all repos, updates stars/status signals, validates the dataset, and opens an update PR from:
+
+```text
+automation/github-repo-snapshot
+```
+
+It does not push dataset changes directly to `main`.
+
+## Local Development
+
+Install dependencies:
+
+```sh
 npm install
+```
 
-# Start development server
+Run the app:
+
+```sh
 npm run dev
 ```
 
-Open [http://localhost:3777](http://localhost:3777)
+Build:
 
-### Build for Production
-
-```bash
+```sh
 npm run build
-npm run preview
 ```
 
----
+Validate the dataset:
 
-## 🎯 Use Cases
+```sh
+npm run validate:data
+```
 
-### 🔍 Discover Hidden Gems
-Find amazing projects before they hit mainstream attention.
+Run a sample GitHub metadata check:
 
-### 📊 Market Research
-See what's trending in specific tech stacks or categories.
+```sh
+npm run check:github:sample
+```
 
-### 🎓 Learning Resources
-Discover well-maintained projects to study and learn from.
+Run the full GitHub metadata check locally as a dry run:
 
-### 🤝 Community Building
-Find and support promising early-stage projects.
+```sh
+npm run check:github
+```
 
-### 💼 Hiring & Recruitment
-Identify talented developers through their projects.
+Apply a full local GitHub metadata refresh:
 
----
+```sh
+npm run check:github:apply
+```
 
-## 🎨 Graph Visualization
+## Project Structure
 
-### How to Read the Graph
+| Path | Purpose |
+| --- | --- |
+| `src/App.tsx` | Main discovery UI and client-side interactions |
+| `src/App.css` | Visual system, responsive layout, cards, mobile polish |
+| `api/submit-repo.ts` | Protected repo submission intake |
+| `public/data/all_repos.json` | Protected source dataset |
+| `public/data/update-report.json` | Latest GitHub check report |
+| `scripts/check-github-repos.mjs` | Daily metadata refresh logic |
+| `scripts/add-submission-to-dataset.mjs` | Accepted submission workflow |
+| `scripts/validate-data.mjs` | Dataset validation |
+| `docs/data-schema.md` | Recommended data schema |
+| `docs/domain-readiness.md` | Domain migration notes |
+| `docs/launch-checklist.md` | Launch and move checklist |
 
-**Node Size:**
-- Larger = More stars
-- Smaller = Fewer stars
+## Domain
 
-**Node Color:**
-- 🔥 **Orange** = Boss tier (500-999 stars)
-- 🔴 **Red** = Hot tier (200-499 stars)
-- 🟡 **Yellow** = Warm tier (50-199 stars)
-- 🔵 **Blue** = Cold tier (<50 stars)
+UND-RDR is live at:
 
-**Clusters:**
-- Nodes cluster by language automatically
-- JavaScript/TypeScript projects form large clusters
-- Niche languages form smaller groups
+```text
+https://undrdr.com
+```
 
-**Interactions:**
-- **Hover** = Show tooltip with stats
-- **Click** = Open GitHub repo
-- **Drag** = Move individual nodes
-- **Scroll** = Zoom in/out
-- **Right-click drag** = Pan view
+The project previously lived under `akaKika.com/undrdr`. Keep legacy redirects alive while search, social previews, and external links settle.
 
----
+## Tech Stack
 
-## 🙋 FAQ
+- React
+- TypeScript
+- Vite
+- Pixi.js
+- Vercel
+- GitHub Actions
 
-**Q: How are repos discovered?**  
-A: Mix of GitHub API queries, community submissions, manual curation, and trending analysis.
+## Product Direction
 
-**Q: How often is the data updated?**  
-A: Currently updated manually. Auto-refresh planned for future version.
-
-**Q: Can I submit a repo?**  
-A: Yes! Submit via GitHub issues or contact @Kika_Loren.
-
-**Q: Why under 1,000 stars?**  
-A: That's the "invisible threshold" — repos start gaining mainstream attention after 1k stars.
-
-**Q: Is this list biased toward certain languages?**  
-A: Slightly. JavaScript/TypeScript dominate due to popularity, but all languages are represented.
-
----
-
-## 🔮 Roadmap
-
-- [ ] Auto-refresh data (daily GitHub API sync)
-- [ ] User submissions form
-- [ ] Advanced filters (by language, date, topics)
-- [ ] Email newsletter (weekly hidden gems)
-- [ ] API access for developers
-- [ ] Export data (CSV, JSON)
-- [ ] Comparison view (side-by-side repos)
-- [ ] Trending alerts (momentum detection)
-
----
-
-## 📖 Why This Exists
-
-> "Most interesting repos are buried under the noise."
-
-UNDRDR was built to solve a personal problem: **finding good projects before everyone else does**.
-
-Product Hunt, GitHub Trending, and Twitter all surface the same popular repos. By the time something hits those channels, it's already "discovered."
-
-This is a **living map** — built to surface projects that aren't on Product Hunt yet.
-
----
-
-## 👨‍💻 Author
-
-**KIKA** — Digital craft and macOS systems
-
-- **Website:** https://akakika.com
-- **Twitter:** [@Kika_Loren](https://twitter.com/Kika_Loren)
-- **GitHub:** https://github.com/dot-RealityTest
-
----
-
-## 📄 License
-
-**Private — All rights reserved to KIKA.**
-
----
-
-## 📊 Stats
-
-- **Total Repos:** 683
-- **Boss Tier:** ~50 repos
-- **Hot Tier:** ~150 repos
-- **Warm Tier:** ~250 repos
-- **Cold Tier:** ~233 repos
-- **Languages:** 40+
-- **Last Updated:** May 2, 2026
-
----
-
-**Built with ❄️ by KIKA**  
-**Last Updated:** May 2, 2026
+UND-RDR should feel like a curated discovery system: clean, fast, editorial, data-first, and useful. It should help people move from one interesting GitHub project to the next without overwhelming them.
