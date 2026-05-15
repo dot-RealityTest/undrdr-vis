@@ -775,22 +775,11 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorit
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
   const favoriteAriaLabel = isLoggedIn ? `${isFavorite ? 'Remove saved repo' : 'Save repo'}: ${repo.displayName}` : `Log in to save ${repo.displayName}`
   const iconName = repoSignalIcon(repo)
-  const openRepo = () => window.open(repo.repoUrl, '_blank', 'noopener,noreferrer')
 
   return (
     <article
       className={`repo-card ${compact ? 'compact' : ''}`}
       style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}
-      role="link"
-      tabIndex={0}
-      aria-label={`Open ${repo.displayName} on GitHub`}
-      onClick={openRepo}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          openRepo()
-        }
-      }}
       onMouseEnter={() => onPreviewRepo(repo.id)}
       onMouseLeave={() => onPreviewRepo(null)}
       onFocus={() => onPreviewRepo(repo.id)}
@@ -799,6 +788,7 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorit
         if (!event.currentTarget.contains(nextTarget)) onPreviewRepo(null)
       }}
     >
+      <a className="card-open-link" href={repo.repoUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.displayName} on GitHub`} />
       <div className="card-topline">
         <span className="status-badge">{!compact && <SignalIcon name={iconName} />}{repo.statusLabel}</span>
         <span className="card-actions">

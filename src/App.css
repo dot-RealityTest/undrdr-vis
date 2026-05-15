@@ -427,6 +427,7 @@ textarea {
 }
 
 .repo-card {
+  position: relative;
   min-width: 0;
   min-height: 304px;
   padding: 19px;
@@ -440,6 +441,23 @@ textarea {
   content-visibility: auto;
   contain-intrinsic-size: 304px;
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.card-open-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.repo-card > :not(.card-open-link) {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.repo-card button {
+  pointer-events: auto;
 }
 
 .repo-card:hover {
