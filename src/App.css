@@ -525,8 +525,7 @@ textarea {
   box-shadow: -24px 0 70px rgba(17, 19, 18, 0.14);
 }
 
-.detail-topline,
-.detail-actions {
+.detail-topline {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -623,8 +622,36 @@ textarea {
 }
 
 .detail-actions {
-  justify-content: flex-start;
   margin-top: 28px;
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+}
+
+.detail-actions a,
+.detail-actions button {
+  min-width: 148px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.detail-actions button:last-child {
+  border-right: 0;
+}
+
+.detail-actions .favorite-button:disabled {
+  background: #f1f0eb;
+  color: var(--soft);
+  opacity: 1;
 }
 
 .detail-metrics {
