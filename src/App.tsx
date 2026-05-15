@@ -211,6 +211,7 @@ function App() {
   const [topic, setTopic] = useState('all')
   const [status, setStatus] = useState<'all' | RepoStatus>('all')
   const [sort, setSort] = useState<SortMode>('curated')
+  const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`./data/all_repos.json?v=${Date.now()}`, { cache: 'no-store' })
@@ -294,6 +295,7 @@ function App() {
   const repoIds = useMemo(() => new Set(repos.map((repo) => repo.id)), [repos])
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds])
   const favoriteRepos = useMemo(() => repos.filter((repo) => favoriteSet.has(repo.id)), [repos, favoriteSet])
+  const selectedRepo = useMemo(() => repos.find((repo) => repo.id === selectedRepoId) || null, [repos, selectedRepoId])
 
   function handleMockSubmit(submission: MockSubmission) {
     const next = [submission, ...submissions].slice(0, 20)
@@ -377,7 +379,7 @@ function App() {
       <UpdateReportPanel report={report} />
 
       <SectionHeader eyebrow="Featured" title="Curated Underrated Repos" detail="High-signal projects from the current dataset." />
-      <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
+      <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onSelectRepo={setSelectedRepoId} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
 
       <section className="split-sections">
         <RepoRail id="new" title="Newest Additions" repos={newest} />
@@ -411,7 +413,7 @@ function App() {
         </div>
         {!mockUser && <StateBlock title="Log in to favorite repos" detail="Favorites are personal, so this mock keeps them behind a local sign-in state." />}
         {mockUser && favoriteRepos.length === 0 && <StateBlock title="No favorites yet" detail="Use the Save button on repo cards to build your personal watchlist." />}
-        {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onToggleFavorite={toggleFavorite} />}
+        {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onSelectRepo={setSelectedRepoId} onToggleFavorite={toggleFavorite} />}
       </section>
 
       <section className="index-section" aria-label="Repository index">
@@ -426,8 +428,18 @@ function App() {
         {loadState === 'loading' && <StateBlock title="Loading repo data" detail="Reading the local UND-RDR repository dataset." />}
         {loadState === 'error' && <StateBlock title="Could not load repo data" detail="The app could not read public/data/all_repos.json. The backup copy is preserved in backups/." />}
         {loadState === 'ready' && filtered.length === 0 && <StateBlock title="No results after filters" detail="Try a broader topic, status, or language." />}
-        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={filtered.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onToggleFavorite={toggleFavorite} />}
+        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={filtered.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onSelectRepo={setSelectedRepoId} onToggleFavorite={toggleFavorite} />}
       </section>
+
+      {selectedRepo && (
+        <RepoDetailPanel
+          repo={selectedRepo}
+          isFavorite={favoriteSet.has(selectedRepo.id)}
+          isLoggedIn={Boolean(mockUser)}
+          onClose={() => setSelectedRepoId(null)}
+          onToggleFavorite={toggleFavorite}
+        />
+      )}
 
       <section className="about-section" id="about">
         <div>
@@ -589,7 +601,7 @@ function SectionHeader({ eyebrow, title, detail }: { eyebrow: string; title: str
   )
 }
 
-function RepoGrid({ repos, favoriteIds, isLoggedIn, onToggleFavorite, emptyTitle, emptyDetail }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onToggleFavorite: (repoId: string) => void; emptyTitle: string; emptyDetail: string }) {
+function RepoGrid({ repos, favoriteIds, isLoggedIn, onSelectRepo, onToggleFavorite, emptyTitle, emptyDetail }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void; emptyTitle: string; emptyDetail: string }) {
   if (!repos.length) return <StateBlock title={emptyTitle} detail={emptyDetail} />
   return (
     <section className="repo-grid">
@@ -599,6 +611,7 @@ function RepoGrid({ repos, favoriteIds, isLoggedIn, onToggleFavorite, emptyTitle
           repo={repo}
           isFavorite={favoriteIds.has(repo.id)}
           isLoggedIn={isLoggedIn}
+          onSelectRepo={onSelectRepo}
           onToggleFavorite={onToggleFavorite}
         />
       ))}
@@ -618,7 +631,7 @@ function RepoRail({ id, title, repos, emptyDetail = 'This section is ready for d
   )
 }
 
-function RepoList({ repos, favoriteIds, isLoggedIn, onToggleFavorite }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onToggleFavorite: (repoId: string) => void }) {
+function RepoList({ repos, favoriteIds, isLoggedIn, onSelectRepo, onToggleFavorite }: { repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void }) {
   return (
     <div className="repo-list">
       {repos.map((repo) => (
@@ -628,6 +641,7 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onToggleFavorite }: { repos:
           compact
           isFavorite={favoriteIds.has(repo.id)}
           isLoggedIn={isLoggedIn}
+          onSelectRepo={onSelectRepo}
           onToggleFavorite={onToggleFavorite}
         />
       ))}
@@ -635,7 +649,7 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onToggleFavorite }: { repos:
   )
 }
 
-function RepoCard({ repo, isFavorite, isLoggedIn, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
+function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
 
   return (
@@ -655,7 +669,7 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onToggleFavorite, compact = fa
           </button>
         </span>
       </div>
-      <a className="repo-title" href={repo.repoUrl} target="_blank" rel="noreferrer">{repo.displayName}</a>
+      <button className="repo-title button-link" type="button" onClick={() => onSelectRepo(repo.id)}>{repo.displayName}</button>
       <p className="repo-owner">{repo.ownerName}/{repo.name}</p>
       <p className="repo-description">{repo.description || 'No description available yet.'}</p>
       <div className="repo-tags">
@@ -666,7 +680,56 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onToggleFavorite, compact = fa
         <span>Updated {formatDate(repo.lastUpdated)}</span>
       </div>
       {!compact && <p className="why-line">{repo.statusReason}</p>}
+      <button className="details-button" type="button" onClick={() => onSelectRepo(repo.id)}>Details</button>
     </article>
+  )
+}
+
+function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavorite }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onClose: () => void; onToggleFavorite: (repoId: string) => void }) {
+  const starDelta = repo.dailyStarDelta || 0
+  const weeklyDelta = repo.weeklyStarDelta || 0
+  const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
+
+  return (
+    <div className="detail-backdrop" role="presentation" onClick={onClose}>
+      <aside className="repo-detail" aria-label={`${repo.displayName} details`} onClick={(event) => event.stopPropagation()}>
+        <div className="detail-topline">
+          <span className="status-badge">{repo.statusLabel}</span>
+          <button type="button" onClick={onClose}>Close</button>
+        </div>
+        <div className="detail-hero">
+          <p>{repo.ownerName}/{repo.name}</p>
+          <h2>{repo.displayName}</h2>
+          <span>{repo.description || 'No description available yet.'}</span>
+        </div>
+        <div className="detail-actions">
+          <a href={repo.repoUrl} target="_blank" rel="noreferrer">Open on GitHub</a>
+          <button
+            className={`favorite-button ${isFavorite ? 'active' : ''}`}
+            type="button"
+            onClick={() => onToggleFavorite(repo.id)}
+            disabled={!isLoggedIn}
+            title={isLoggedIn ? favoriteLabel : 'Mock login before saving favorites'}
+          >
+            {favoriteLabel}
+          </button>
+        </div>
+        <div className="detail-metrics">
+          <Metric label="Stars" value={repo.stars} />
+          <Metric label="Daily delta" value={starDelta} />
+          <Metric label="Weekly delta" value={weeklyDelta} />
+        </div>
+        <div className="detail-grid">
+          <Definition title="Language" detail={repo.language || 'Unknown'} />
+          <Definition title="First seen" detail={formatDate(repo.firstSeen)} />
+          <Definition title="Last updated" detail={formatDate(repo.lastUpdated)} />
+          <Definition title="Why it matters" detail={repo.statusReason} />
+        </div>
+        <div className="detail-tags">
+          {repo.allTopics.length ? repo.allTopics.map((item) => <span key={item}>{item}</span>) : <span>No topics yet</span>}
+        </div>
+      </aside>
+    </div>
   )
 }
 
