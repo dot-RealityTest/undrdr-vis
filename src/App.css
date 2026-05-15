@@ -1611,6 +1611,19 @@ textarea {
   color: var(--amber);
 }
 
+.submit-note.success {
+  border-color: rgba(31, 138, 91, 0.34);
+  color: var(--green);
+}
+
+.submit-honeypot {
+  position: absolute;
+  left: -100vw;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .submit-form button {
   min-height: 48px;
   border: 1px solid var(--ink);
@@ -1624,6 +1637,16 @@ textarea {
 .submit-form button:hover {
   background: transparent;
   color: var(--ink);
+}
+
+.submit-form button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.submit-form button:disabled:hover {
+  background: var(--ink);
+  color: #fff;
 }
 
 .submission-preview {

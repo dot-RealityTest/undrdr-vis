@@ -74,11 +74,27 @@ type ReportRepo = {
   status: RepoStatus
 }
 
-type MockSubmission = {
+type SubmissionReceipt = {
+  id?: string
   repoUrl: string
   reason: string
   contact: string
   submittedAt: string
+  delivery?: 'webhook' | 'email' | 'validated-only' | 'local'
+}
+
+type SubmitResponse = {
+  ok: boolean
+  message?: string
+  error?: string
+  delivery?: SubmissionReceipt['delivery']
+  submission?: {
+    id: string
+    repoUrl: string
+    reason: string
+    contact: string
+    submittedAt: string
+  }
 }
 
 type MockUser = {
@@ -291,7 +307,7 @@ function normalizeRepo(repo: Repo): RepoView {
 function App() {
   const [repos, setRepos] = useState<RepoView[]>([])
   const [report, setReport] = useState<UpdateReport | null>(null)
-  const [submissions, setSubmissions] = useState<MockSubmission[]>(() => readStoredArray<MockSubmission>('undrdr-mock-submissions'))
+  const [submissions, setSubmissions] = useState<SubmissionReceipt[]>(() => readStoredArray<SubmissionReceipt>('undrdr-submission-receipts'))
   const [mockUser, setMockUser] = useState<MockUser | null>(() => readStoredUser())
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readStoredArray<string>('undrdr-mock-favorites'))
   const [loadState, setLoadState] = useState<LoadState>('loading')
@@ -463,15 +479,15 @@ function App() {
     jumpToIndex()
   }
 
-  function handleMockSubmit(submission: MockSubmission) {
+  function handleSubmissionReceipt(submission: SubmissionReceipt) {
     const next = [submission, ...submissions].slice(0, 20)
     setSubmissions(next)
-    window.localStorage.setItem('undrdr-mock-submissions', JSON.stringify(next))
+    window.localStorage.setItem('undrdr-submission-receipts', JSON.stringify(next))
   }
 
-  function clearMockSubmissions() {
+  function clearSubmissionReceipts() {
     setSubmissions([])
-    window.localStorage.removeItem('undrdr-mock-submissions')
+    window.localStorage.removeItem('undrdr-submission-receipts')
   }
 
   function mockSignIn() {
@@ -581,7 +597,7 @@ function App() {
         </div>
       </section>
 
-      <SubmitRepoSection siteConfig={SITE_CONFIG} existingRepoIds={repoIds} submissions={submissions} onClear={clearMockSubmissions} onSubmit={handleMockSubmit} />
+      <SubmitRepoSection siteConfig={SITE_CONFIG} existingRepoIds={repoIds} submissions={submissions} onClear={clearSubmissionReceipts} onSubmit={handleSubmissionReceipt} />
 
       <section className="favorites-section" id="favorites" aria-label="Repository watchlist">
         <div className="index-heading">
@@ -658,8 +674,8 @@ function MethodSection({ siteConfig, stats, report, duplicateCount }: { siteConf
     : 'Daily automation is prepared, but not fully connected yet.'
   const isTargetDomain = siteConfig.activeHost === siteConfig.targetDomain
   const submissionDetail = siteConfig.siteEmail
-    ? `The submit form is still a local mock. A real queue can route to ${siteConfig.siteEmail} when intake is connected.`
-    : `The submit form is a local mock until ${siteConfig.targetDomain} and the site email are ready.`
+    ? `Submissions go through a protected intake check now. Mail forwarding can route review copies to ${siteConfig.siteEmail}.`
+    : `Submissions go through a protected intake check now. Add a webhook or review inbox when ${siteConfig.targetDomain} operations are ready.`
   const domainDetail = isTargetDomain
     ? `Metadata is targeting ${siteConfig.siteUrl}. Keep akaKika redirects alive until the move is verified.`
     : `UND-RDR stays under ${siteConfig.siteUrl} for now. Set VITE_SITE_URL to https://${siteConfig.targetDomain}/ when the domain is connected.`
@@ -742,39 +758,77 @@ function ReportColumn({ title, repos, empty }: { title: string; repos: ReportRep
   )
 }
 
-function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, onSubmit }: { siteConfig: SiteConfig; existingRepoIds: Set<string>; submissions: MockSubmission[]; onClear: () => void; onSubmit: (submission: MockSubmission) => void }) {
+function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, onSubmit }: { siteConfig: SiteConfig; existingRepoIds: Set<string>; submissions: SubmissionReceipt[]; onClear: () => void; onSubmit: (submission: SubmissionReceipt) => void }) {
   const [repoUrl, setRepoUrl] = useState('')
   const [reason, setReason] = useState('')
   const [contact, setContact] = useState('')
-  const [message, setMessage] = useState('Mock intake only. Nothing is emailed or added to the live dataset yet.')
+  const [website, setWebsite] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [messageKind, setMessageKind] = useState<'info' | 'success' | 'warning'>('info')
+  const [message, setMessage] = useState('Submissions are validated by UND-RDR intake before review. The live dataset is never changed automatically.')
   const slug = normalizeSlug(repoUrl)
   const isDuplicate = Boolean(slug && existingRepoIds.has(slug))
   const intakeText = siteConfig.siteEmail
-    ? `This is still a local mock intake. When submission storage is connected, public contact can route through ${siteConfig.siteEmail}.`
-    : `For now this is a local mock intake. After ${siteConfig.targetDomain} and site email are set, this can become a real submission queue.`
+    ? `Submissions are received for review. Public contact can route through ${siteConfig.siteEmail} when mail forwarding is enabled.`
+    : `Submissions are received through a protected intake endpoint. Add a review email or webhook later to forward them outside ${siteConfig.targetDomain}.`
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!slug) {
+      setMessageKind('warning')
       setMessage('Paste a full GitHub repo URL, like https://github.com/owner/repo.')
       return
     }
 
     if (isDuplicate) {
+      setMessageKind('warning')
       setMessage(`${slug} is already in UND-RDR. Duplicate caught before intake.`)
       return
     }
 
-    onSubmit({
-      repoUrl: `https://github.com/${slug}`,
-      reason: reason.trim(),
-      contact: contact.trim(),
-      submittedAt: new Date().toISOString(),
-    })
-    setRepoUrl('')
-    setReason('')
-    setContact('')
-    setMessage('Mock submission saved locally for review. The live dataset was not changed.')
+    setIsSubmitting(true)
+    setMessageKind('info')
+    setMessage('Checking the repo against the UND-RDR index...')
+
+    try {
+      const response = await fetch('/api/submit-repo', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          repoUrl,
+          reason,
+          contact,
+          website,
+        }),
+      })
+      const result = await response.json() as SubmitResponse
+
+      if (!response.ok || !result.ok || !result.submission) {
+        setMessageKind('warning')
+        setMessage(result.message || 'Submission could not be received. Try again later.')
+        return
+      }
+
+      onSubmit({
+        id: result.submission.id,
+        repoUrl: result.submission.repoUrl,
+        reason: result.submission.reason,
+        contact: result.submission.contact,
+        submittedAt: result.submission.submittedAt,
+        delivery: result.delivery || 'validated-only',
+      })
+      setRepoUrl('')
+      setReason('')
+      setContact('')
+      setWebsite('')
+      setMessageKind('success')
+      setMessage(result.message || 'Repository received for review. The live dataset was not changed.')
+    } catch {
+      setMessageKind('warning')
+      setMessage('Submission endpoint could not be reached. Try again later.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -820,20 +874,30 @@ function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, 
             spellCheck={false}
           />
         </label>
-        <div className={`submit-note ${isDuplicate ? 'warning' : ''}`} aria-live="polite">{message}</div>
-        <button type="submit">Mock submit</button>
+        <label className="submit-honeypot" aria-hidden="true">
+          <span>Website</span>
+          <input
+            name="website"
+            value={website}
+            onChange={(event) => setWebsite(event.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </label>
+        <div className={`submit-note ${isDuplicate || messageKind === 'warning' ? 'warning' : ''} ${messageKind === 'success' ? 'success' : ''}`} aria-live="polite">{message}</div>
+        <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Checking...' : 'Submit for review'}</button>
       </form>
       <div className="submission-preview">
         <div className="queue-heading">
-          <strong>Mock queue</strong>
+          <strong>Review receipts</strong>
           {submissions.length > 0 && <button type="button" onClick={onClear}>Clear</button>}
         </div>
         {submissions.length ? submissions.slice(0, 4).map((item) => (
-          <a key={`${item.repoUrl}-${item.submittedAt}`} href={item.repoUrl} target="_blank" rel="noreferrer">
+          <a key={item.id || `${item.repoUrl}-${item.submittedAt}`} href={item.repoUrl} target="_blank" rel="noreferrer">
             <span>{normalizeSlug(item.repoUrl)}</span>
-            <em>{formatDate(item.submittedAt)}</em>
+            <em>{item.delivery === 'validated-only' ? 'received' : item.delivery || formatDate(item.submittedAt)}</em>
           </a>
-        )) : <span>No mock submissions yet.</span>}
+        )) : <span>No submissions received in this browser yet.</span>}
       </div>
     </section>
   )
