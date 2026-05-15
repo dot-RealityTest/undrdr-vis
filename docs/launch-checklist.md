@@ -90,8 +90,9 @@ Domain attachment status:
 - `undrdr.com` is added to the `undrdr` Vercel project.
 - `www.undrdr.com` is added to the `undrdr` Vercel project.
 - Both aliases point to the current deployment in Vercel.
-- DNS is still at GoDaddy nameservers: `ns19.domaincontrol.com`, `ns20.domaincontrol.com`.
-- The domain currently returns a GoDaddy parked/lander page until DNS changes.
+- DNS is still managed at GoDaddy nameservers: `ns19.domaincontrol.com`, `ns20.domaincontrol.com`.
+- `https://undrdr.com/` is live and serving UND-RDR from Vercel.
+- `https://www.undrdr.com/` is live and serving UND-RDR from Vercel.
 
 Set these DNS records at GoDaddy:
 
@@ -121,7 +122,17 @@ Nameserver  ns1.vercel-dns.com
 Nameserver  ns2.vercel-dns.com
 ```
 
-After DNS propagation:
+Verified live domain:
+
+- `https://undrdr.com/#favorites`
+- `https://www.undrdr.com/`
+- Canonical: `https://undrdr.com/`
+- Open Graph image: `https://undrdr.com/assets/undrdr-discovery-icon-bright.png`
+- Repo count shown: `683 repositories`
+- Data endpoint: `/data/all_repos.json` returns `200`
+- Browser console errors: none
+
+After launch:
 
 - Keep `akakika.com/undrdr/` available as the old location.
 - Verify canonical, Open Graph URL, Twitter image, and JSON-LD point to `https://undrdr.com/`.
