@@ -1821,16 +1821,52 @@ textarea {
 
 @media (max-width: 760px) {
   .site-header {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding: 10px 18px 0;
+  }
+
+  .wordmark {
+    font-size: 18px;
+  }
+
+  .wordmark-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
   }
 
   .site-header nav {
-    width: 100%;
+    order: 3;
+    flex: 0 0 calc(100% + 36px);
+    width: calc(100% + 36px);
+    margin: 0 -18px;
+    padding: 0 18px 9px;
+    gap: 4px;
+    border-top: 1px solid rgba(17, 19, 18, 0.08);
+    scroll-padding-inline: 18px;
+  }
+
+  .site-header nav a {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 12px;
   }
 
   .auth-control {
-    width: 100%;
+    width: auto;
+    margin-left: auto;
+    gap: 6px;
+  }
+
+  .auth-button,
+  .auth-control button,
+  .auth-control a {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 11px;
   }
 
   .hover-preview {
@@ -1838,39 +1874,124 @@ textarea {
   }
 
   .signal-system {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    overflow-x: auto;
+    padding: 0 18px 4px;
+    scrollbar-width: none;
+  }
+
+  .signal-system::-webkit-scrollbar,
+  .mode-buttons::-webkit-scrollbar,
+  .update-report::-webkit-scrollbar,
+  .site-header nav::-webkit-scrollbar {
+    display: none;
   }
 
   .signal-system div {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
     justify-content: flex-start;
   }
 
-  .mode-buttons {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .signal-system-label {
+    flex: 0 0 auto;
+  }
+
+  .signal-system div span {
+    white-space: nowrap;
   }
 
   .hero {
-    padding-top: 42px;
+    gap: 20px;
+    align-items: start;
+    padding: 28px 18px 24px;
   }
 
   .hero-copy h1 {
-    font-size: clamp(42px, 13vw, 64px);
-    line-height: 0.96;
+    max-width: 100%;
+    font-size: clamp(36px, 10.4vw, 44px);
+    line-height: 0.98;
   }
 
   .hero-copy p,
   .detail-description {
-    font-size: 17px;
-    line-height: 1.55;
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+
+  .hero-copy p {
+    margin-top: 15px;
+  }
+
+  .search-panel {
+    padding: 12px;
+    box-shadow: none;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 9px;
+  }
+
+  .filter-grid select {
+    padding-inline: 9px;
+    font-size: 14px;
+  }
+
+  .discovery-modes {
+    display: block;
+    margin-bottom: 14px;
+    padding: 0;
+  }
+
+  .discovery-modes > div:first-child {
+    margin: 0 18px 10px;
+    padding-top: 10px;
+  }
+
+  .discovery-modes > div:first-child span {
+    display: none;
+  }
+
+  .mode-buttons {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 0 18px 6px;
+    scroll-padding-inline: 18px;
+    scroll-snap-type: x proximity;
+  }
+
+  .mode-buttons button {
+    flex: 0 0 128px;
+    min-height: 70px;
+    padding: 10px;
+    scroll-snap-align: start;
+  }
+
+  .mode-buttons strong {
+    font-size: 11px;
+  }
+
+  .mode-buttons span {
+    font-size: 10px;
   }
 
   .repo-card {
     min-height: 0;
+    contain-intrinsic-size: 190px;
   }
 
   .repo-list .repo-title {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .repo-detail {
@@ -1881,30 +2002,221 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .filter-grid,
-  .metrics,
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 18px;
+  }
+
+  .metric {
+    padding: 14px 12px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .metric:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .metric:last-child {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .metric strong {
+    font-size: 30px;
+  }
+
+  .metric span {
+    margin-top: 5px;
+    font-size: 11px;
+  }
+
+  .update-report {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 0 18px 6px;
+    scroll-padding-inline: 18px;
+    scroll-snap-type: x proximity;
+  }
+
+  .update-summary,
+  .report-column,
+  .report-issues {
+    flex: 0 0 260px;
+    padding: 14px;
+    scroll-snap-align: start;
+  }
+
+  .section-header,
+  .index-section,
+  .favorites-section,
+  .method-section,
+  .about-section {
+    margin-top: 46px;
+  }
+
+  .section-header {
+    gap: 8px;
+    margin-bottom: 13px;
+  }
+
+  .section-header h2,
+  .index-heading h2,
+  .about-section h2 {
+    font-size: clamp(30px, 10vw, 42px);
+  }
+
+  .section-header span {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .repo-grid,
+  .split-sections,
+  .repo-list,
+  .topic-section,
+  .submit-section,
+  .method-section,
+  .about-section,
+  .index-section,
+  .favorites-section {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .repo-grid .repo-card {
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .repo-grid .repo-description {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.42;
+  }
+
+  .repo-grid .repo-tags {
+    margin-top: 10px;
+  }
+
+  .repo-grid .repo-tags span:nth-child(n + 4) {
+    display: none;
+  }
+
+  .repo-title {
+    margin-top: 12px;
+    font-size: 22px;
+  }
+
+  .repo-identity {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .repo-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .repo-description {
+    font-size: 14px;
+  }
+
+  .repo-tags span {
+    padding: 4px 7px;
+    font-size: 11px;
+  }
+
+  .card-footer {
+    padding-top: 12px;
+  }
+
+  .repo-list .repo-card.compact {
+    padding: 11px 12px;
+    contain-intrinsic-size: 96px;
+  }
+
+  .repo-list .repo-identity {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .repo-list .repo-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .repo-list .repo-owner {
+    margin-top: 3px;
+    font-size: 11px;
+  }
+
+  .repo-list .card-footer {
+    align-items: center;
+    padding-top: 9px;
+  }
+
+  .repo-list .card-footer .card-meta span {
+    display: none;
+  }
+
+  .favorite-button {
+    min-height: 34px;
+    min-width: 34px;
+  }
+
   .detail-metrics,
   .detail-grid,
   .trail-actions,
   .related-repos,
-  .update-report,
   .method-grid,
   .repo-grid,
   .split-sections,
-  .topic-grid,
   .repo-list {
     grid-template-columns: 1fr;
   }
 
-  .metric {
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
+  .topic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .metric:last-child { border-bottom: 0; }
+  .definition,
+  .state-block {
+    padding: 14px;
+  }
 
   .index-heading {
     align-items: flex-start;
     flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .reset-button {
+    min-height: 38px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-copy h1 {
+    max-width: 100%;
+  }
+
+  .auth-control a {
+    display: none;
+  }
+
+  .mode-buttons button {
+    flex-basis: 122px;
+  }
+
+  .update-summary,
+  .report-column,
+  .report-issues {
+    flex-basis: 236px;
   }
 }

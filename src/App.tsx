@@ -493,7 +493,7 @@ function App() {
 
       <section className="hero" id="discover">
         <div className="hero-copy">
-          <h1>{formatNumber(stats.total)} under-the-radar GitHub repos.</h1>
+          <h1>{formatNumber(stats.total)} underrated GitHub repos.</h1>
           <p>Browse what is heating up before it gets obvious. Hover for the signal, click a card to open the repo, and keep moving from one find to the next.</p>
         </div>
         <div className="search-panel" aria-label="Repository search and filters">
