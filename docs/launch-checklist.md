@@ -1,6 +1,6 @@
 # UND-RDR Launch Checklist
 
-This checklist is for moving the current standalone UND-RDR app from akaKika staging to `undrdr.com`.
+This checklist tracks the move from akaKika staging to the live `undrdr.com` site.
 
 ## Preflight
 
@@ -61,18 +61,18 @@ Production environment variables are saved on the Vercel project.
 Preview deployments from this local machine can pass the same values with `--build-env`.
 Branch-specific Preview env vars can be added after the working branch exists on GitHub.
 
-Do not switch DNS until the preview deployment works.
+DNS is already switched. Keep these values in place for future production deployments.
 
 ## Verify Preview
 
-On `https://undrdr.vercel.app/` or a Vercel preview URL, check:
+On `https://undrdr.vercel.app/`, `https://undrdr.com/`, or a Vercel preview URL, check:
 
 - App loads without console errors.
 - `public/data/all_repos.json` loads and shows 683 repos.
 - Header bright icon loads.
 - Card click opens the GitHub repo in a new tab.
 - Favorites still require mock login.
-- Submit remains a mock queue.
+- Submit creates a protected GitHub issue review entry.
 - Data / Method section mentions the configured target correctly.
 
 Current verified preview:
@@ -127,7 +127,7 @@ Verified live domain:
 - `https://undrdr.com/#favorites`
 - `https://www.undrdr.com/`
 - Canonical: `https://undrdr.com/`
-- Open Graph image: `https://undrdr.com/assets/undrdr-discovery-icon-bright.png`
+- Open Graph image: `https://undrdr.com/assets/undrdr-social-card.png`
 - Repo count shown: `683 repositories`
 - Data endpoint: `/data/all_repos.json` returns `200`
 - Browser console errors: none
@@ -136,10 +136,12 @@ After launch:
 
 - Keep `akakika.com/undrdr/` available as the old location.
 - Verify canonical, Open Graph URL, Twitter image, and JSON-LD point to `https://undrdr.com/`.
+- Keep GitHub repo metadata pointing at `https://undrdr.com`.
+- Keep the old akaKika route as either a redirect or an archive page that clearly points to `undrdr.com`.
 
 ## Post-Launch
 
 - Create the real site email or alias.
-- Replace mock submit with a real intake path.
-- Add daily GitHub star-check automation.
 - Decide whether `akakika.com/undrdr/` should redirect to `undrdr.com` or remain as a historical entry point.
+- Watch the daily GitHub refresh PRs and merge only after validation stays clean.
+- Review real submission issues before accepting them into `public/data/all_repos.json`.
