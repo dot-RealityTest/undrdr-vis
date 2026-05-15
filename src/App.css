@@ -692,14 +692,14 @@ textarea {
   }
 }
 
-.favorite-button:hover:not(:disabled),
+.favorite-button:hover:not([aria-disabled="true"]),
 .favorite-button.active {
   border-color: var(--ink);
   background: var(--ink);
   color: #fff;
 }
 
-.favorite-button:disabled {
+.favorite-button[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.62;
 }

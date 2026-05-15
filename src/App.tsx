@@ -708,7 +708,7 @@ function HoverPreview({ repo }: { repo: RepoView }) {
   const delta = repo.dailyStarDelta || repo.weeklyStarDelta || 0
 
   return (
-    <a className="hover-preview" href={repo.repoUrl} target="_blank" rel="noreferrer" style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties} aria-label={`Open ${repo.displayName} on GitHub`}>
+    <a className="hover-preview" href={repo.repoUrl} target="_blank" rel="noreferrer" tabIndex={-1} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties} aria-label={`Open ${repo.displayName} on GitHub`}>
       <p className="hover-preview-kicker"><SignalIcon name={iconName} /> Current Hover</p>
       <h3>{repo.displayName}</h3>
       <span>{repo.description || 'No description available yet.'}</span>
@@ -774,6 +774,7 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onPreviewRepo, onToggleFavor
 function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onPreviewRepo: (repoId: string | null) => void; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
   const favoriteAriaLabel = isLoggedIn ? `${isFavorite ? 'Remove saved repo' : 'Save repo'}: ${repo.displayName}` : `Log in to save ${repo.displayName}`
+  const repoOpenLabel = `Open ${repo.displayName} on GitHub. ${repo.statusLabel}. ${formatNumber(repo.stars)} stars. ${repo.language || 'Unknown'} repository.`
   const iconName = repoSignalIcon(repo)
 
   return (
@@ -788,7 +789,7 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorit
         if (!event.currentTarget.contains(nextTarget)) onPreviewRepo(null)
       }}
     >
-      <a className="card-open-link" href={repo.repoUrl} target="_blank" rel="noreferrer" aria-label={`Open ${repo.displayName} on GitHub`} />
+      <a className="card-open-link" href={repo.repoUrl} target="_blank" rel="noreferrer" aria-label={repoOpenLabel} title={`Open ${repo.displayName} on GitHub`} />
       <div className="card-topline">
         <span className="status-badge">{!compact && <SignalIcon name={iconName} />}{repo.statusLabel}</span>
         <span className="card-actions">
@@ -798,9 +799,10 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorit
             type="button"
             onClick={(event) => {
               event.stopPropagation()
+              if (!isLoggedIn) return
               onToggleFavorite(repo.id)
             }}
-            disabled={!isLoggedIn}
+            aria-disabled={!isLoggedIn}
             title={isLoggedIn ? favoriteLabel : 'Mock login before saving favorites'}
             aria-label={favoriteAriaLabel}
           >
