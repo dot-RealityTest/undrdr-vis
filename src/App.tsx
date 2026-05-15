@@ -787,7 +787,6 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
         <strong>{formatNumber(repo.stars)} stars</strong>
         <span>Updated {formatDate(repo.lastUpdated)}</span>
       </div>
-      {!compact && <p className="why-line">{repo.statusReason}</p>}
       <button className="details-button" type="button" onClick={() => onSelectRepo(repo.id)}>Details</button>
     </article>
   )

@@ -637,13 +637,6 @@ textarea {
 
 .card-footer strong { color: var(--ink); }
 
-.why-line {
-  margin: 12px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
 .details-button {
   align-self: flex-start;
   min-height: 34px;
