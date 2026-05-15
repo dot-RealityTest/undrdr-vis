@@ -296,6 +296,28 @@ function App() {
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds])
   const favoriteRepos = useMemo(() => repos.filter((repo) => favoriteSet.has(repo.id)), [repos, favoriteSet])
   const selectedRepo = useMemo(() => repos.find((repo) => repo.id === selectedRepoId) || null, [repos, selectedRepoId])
+  const visibleRepos = useMemo(() => filtered.slice(0, 80), [filtered])
+  const selectedBrowseIndex = selectedRepo ? visibleRepos.findIndex((repo) => repo.id === selectedRepo.id) : -1
+  const previousRepo = selectedBrowseIndex > 0 ? visibleRepos[selectedBrowseIndex - 1] : null
+  const nextRepo = selectedBrowseIndex >= 0 && selectedBrowseIndex < visibleRepos.length - 1 ? visibleRepos[selectedBrowseIndex + 1] : null
+  const relatedRepos = useMemo(() => {
+    if (!selectedRepo) return []
+    const selectedTopics = new Set(selectedRepo.allTopics)
+
+    return repos
+      .filter((repo) => repo.id !== selectedRepo.id)
+      .map((repo) => {
+        const sharedTopics = repo.allTopics.filter((item) => selectedTopics.has(item)).length
+        const languageMatch = repo.language && selectedRepo.language && repo.language === selectedRepo.language ? 2 : 0
+        const statusMatch = repo.statusLabel === selectedRepo.statusLabel ? 1.5 : 0
+        const starCloseness = Math.max(0, 1 - Math.abs(repo.stars - selectedRepo.stars) / 1000)
+        return { repo, score: sharedTopics * 3 + languageMatch + statusMatch + starCloseness }
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score || b.repo.growthScore - a.repo.growthScore)
+      .slice(0, 4)
+      .map((item) => item.repo)
+  }, [repos, selectedRepo])
 
   function handleMockSubmit(submission: MockSubmission) {
     const next = [submission, ...submissions].slice(0, 20)
@@ -435,7 +457,7 @@ function App() {
         {loadState === 'loading' && <StateBlock title="Loading repo data" detail="Reading the local UND-RDR repository dataset." />}
         {loadState === 'error' && <StateBlock title="Could not load repo data" detail="The app could not read public/data/all_repos.json. The backup copy is preserved in backups/." />}
         {loadState === 'ready' && filtered.length === 0 && <StateBlock title="No results after filters" detail="Try a broader topic, status, or language." />}
-        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={filtered.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onSelectRepo={setSelectedRepoId} onToggleFavorite={toggleFavorite} />}
+        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={visibleRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onSelectRepo={setSelectedRepoId} onToggleFavorite={toggleFavorite} />}
       </section>
 
       {selectedRepo && (
@@ -445,6 +467,10 @@ function App() {
           isLoggedIn={Boolean(mockUser)}
           onClose={() => setSelectedRepoId(null)}
           onToggleFavorite={toggleFavorite}
+          onSelectRepo={setSelectedRepoId}
+          previousRepo={previousRepo}
+          nextRepo={nextRepo}
+          relatedRepos={relatedRepos}
         />
       )}
 
@@ -727,7 +753,7 @@ function StarIcon({ filled = false }: { filled?: boolean }) {
   )
 }
 
-function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavorite }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onClose: () => void; onToggleFavorite: (repoId: string) => void }) {
+function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavorite, onSelectRepo, previousRepo, nextRepo, relatedRepos }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onClose: () => void; onToggleFavorite: (repoId: string) => void; onSelectRepo: (repoId: string) => void; previousRepo: RepoView | null; nextRepo: RepoView | null; relatedRepos: RepoView[] }) {
   const starDelta = repo.dailyStarDelta || 0
   const weeklyDelta = repo.weeklyStarDelta || 0
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
@@ -772,11 +798,41 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
           <Definition title="Last updated" detail={formatDate(repo.lastUpdated)} />
           <Definition title="Threshold" detail={repo.stars >= 1000 ? 'Graduated from underrated' : `${formatNumber(Math.max(0, 1000 - repo.stars))} stars from 1K`} />
         </div>
+        <div className="discovery-trail" aria-label="Continue discovering repositories">
+          <div className="trail-header">
+            <strong>Continue Discovering</strong>
+            <span>{relatedRepos.length ? 'Similar signals from the index' : 'Move through the current browse view'}</span>
+          </div>
+          <div className="trail-actions">
+            <TrailButton label="Previous" repo={previousRepo} onSelectRepo={onSelectRepo} />
+            <TrailButton label="Next" repo={nextRepo} onSelectRepo={onSelectRepo} />
+          </div>
+          {relatedRepos.length > 0 && (
+            <div className="related-repos">
+              {relatedRepos.map((related) => (
+                <button key={related.id} type="button" onClick={() => onSelectRepo(related.id)}>
+                  <span>{related.statusLabel}</span>
+                  <strong>{related.displayName}</strong>
+                  <em>{related.language || 'Unknown'} · {formatNumber(related.stars)} stars</em>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="detail-tags">
           {repo.allTopics.length ? repo.allTopics.map((item) => <span key={item}>{item}</span>) : <span>No topics yet</span>}
         </div>
       </aside>
     </div>
+  )
+}
+
+function TrailButton({ label, repo, onSelectRepo }: { label: string; repo: RepoView | null; onSelectRepo: (repoId: string) => void }) {
+  return (
+    <button className="trail-button" type="button" onClick={() => repo && onSelectRepo(repo.id)} disabled={!repo}>
+      <span>{label}</span>
+      <strong>{repo ? repo.displayName : 'End of List'}</strong>
+    </button>
   )
 }
 
