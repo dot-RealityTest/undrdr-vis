@@ -650,7 +650,7 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onSelectRepo, onToggleFavori
 }
 
 function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
-  const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
+  const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : (compact ? 'Login' : 'Login to save')
 
   return (
     <article className={`repo-card ${compact ? 'compact' : ''}`} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}>

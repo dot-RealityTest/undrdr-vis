@@ -405,6 +405,16 @@ textarea {
   box-shadow: none;
 }
 
+.repo-list .repo-card.compact {
+  padding: 14px;
+  border-left-width: 2px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.repo-list .repo-card.compact:hover {
+  box-shadow: 0 10px 24px rgba(17, 19, 18, 0.045);
+}
+
 .card-topline,
 .card-footer {
   display: flex;
@@ -537,6 +547,65 @@ textarea {
 .details-button:hover {
   border-color: var(--ink);
   color: var(--ink);
+}
+
+.repo-list .card-topline,
+.repo-list .card-footer {
+  gap: 8px;
+  font-size: 10px;
+}
+
+.repo-list .card-actions {
+  gap: 6px;
+}
+
+.repo-list .favorite-button {
+  min-height: 26px;
+  padding: 0 8px;
+}
+
+.repo-list .repo-title {
+  margin-top: 10px;
+  font-size: 20px;
+  line-height: 1.12;
+}
+
+.repo-list .repo-owner {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.repo-list .repo-description {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.repo-list .repo-tags {
+  gap: 5px;
+  margin-top: 12px;
+  max-height: 25px;
+  overflow: hidden;
+}
+
+.repo-list .repo-tags span {
+  padding: 4px 7px;
+  font-size: 11px;
+}
+
+.repo-list .card-footer {
+  padding-top: 14px;
+}
+
+.repo-list .details-button {
+  min-height: 30px;
+  margin-top: 10px;
+  padding: 0 10px;
+  font-size: 11px;
 }
 
 .detail-backdrop {
@@ -1054,8 +1123,9 @@ textarea {
 
 .repo-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 10px;
 }
 
 .state-block {
@@ -1136,7 +1206,10 @@ textarea {
   .update-report,
   .repo-grid,
   .split-sections,
-  .topic-grid,
+  .topic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .repo-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1173,6 +1246,10 @@ textarea {
 
   .repo-card {
     min-height: 0;
+  }
+
+  .repo-list .repo-title {
+    font-size: 19px;
   }
 
   .repo-detail {
