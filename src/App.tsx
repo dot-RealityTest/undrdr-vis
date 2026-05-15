@@ -80,7 +80,8 @@ type SubmissionReceipt = {
   reason: string
   contact: string
   submittedAt: string
-  delivery?: 'webhook' | 'email' | 'validated-only' | 'local'
+  delivery?: 'github-issue' | 'webhook' | 'email' | 'validated-only' | 'local'
+  reviewUrl?: string | null
 }
 
 type SubmitResponse = {
@@ -88,6 +89,7 @@ type SubmitResponse = {
   message?: string
   error?: string
   delivery?: SubmissionReceipt['delivery']
+  reviewUrl?: string | null
   submission?: {
     id: string
     repoUrl: string
@@ -171,6 +173,14 @@ function formatNumber(value = 0) {
 function formatDate(value?: string | null) {
   if (!value) return 'No date'
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
+}
+
+function formatSubmissionDelivery(delivery: SubmissionReceipt['delivery'], submittedAt: string) {
+  if (delivery === 'github-issue') return 'issue created'
+  if (delivery === 'webhook') return 'sent'
+  if (delivery === 'email') return 'emailed'
+  if (delivery === 'validated-only') return 'received'
+  return formatDate(submittedAt)
 }
 
 function daysSince(value?: string | null) {
@@ -816,6 +826,7 @@ function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, 
         contact: result.submission.contact,
         submittedAt: result.submission.submittedAt,
         delivery: result.delivery || 'validated-only',
+        reviewUrl: result.reviewUrl || null,
       })
       setRepoUrl('')
       setReason('')
@@ -893,9 +904,9 @@ function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, 
           {submissions.length > 0 && <button type="button" onClick={onClear}>Clear</button>}
         </div>
         {submissions.length ? submissions.slice(0, 4).map((item) => (
-          <a key={item.id || `${item.repoUrl}-${item.submittedAt}`} href={item.repoUrl} target="_blank" rel="noreferrer">
+          <a key={item.id || `${item.repoUrl}-${item.submittedAt}`} href={item.reviewUrl || item.repoUrl} target="_blank" rel="noreferrer">
             <span>{normalizeSlug(item.repoUrl)}</span>
-            <em>{item.delivery === 'validated-only' ? 'received' : item.delivery || formatDate(item.submittedAt)}</em>
+            <em>{formatSubmissionDelivery(item.delivery, item.submittedAt)}</em>
           </a>
         )) : <span>No submissions received in this browser yet.</span>}
       </div>

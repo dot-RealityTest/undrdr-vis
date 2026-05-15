@@ -32,6 +32,8 @@ type IntakeSubmission = {
   status: 'received'
 }
 
+type Delivery = 'github-issue' | 'webhook' | 'email' | 'validated-only'
+
 const MAX_BODY_BYTES = 16_384
 const MAX_REASON_LENGTH = 900
 const MAX_CONTACT_LENGTH = 160
@@ -111,6 +113,50 @@ async function forwardToWebhook(submission: IntakeSubmission) {
 
   if (!response.ok) throw new Error(`webhook-${response.status}`)
   return true
+}
+
+async function forwardToGitHubIssue(submission: IntakeSubmission) {
+  const token = process.env.SUBMISSIONS_GITHUB_TOKEN
+  const targetRepo = process.env.SUBMISSIONS_GITHUB_REPO
+  if (!token || !targetRepo) return null
+
+  const labels = (process.env.SUBMISSIONS_GITHUB_LABELS || '')
+    .split(',')
+    .map((label) => label.trim())
+    .filter(Boolean)
+
+  const body = [
+    'New UND-RDR repository submission.',
+    '',
+    `- Repo: ${submission.repoUrl}`,
+    `- Reason: ${submission.reason || 'No reason provided'}`,
+    `- Contact: ${submission.contact || 'Not provided'}`,
+    `- Submitted: ${submission.submittedAt}`,
+    `- Intake ID: ${submission.id}`,
+    '',
+    'The live dataset was not changed by this submission.',
+  ].join('\n')
+
+  const response = await fetch(`https://api.github.com/repos/${targetRepo}/issues`, {
+    method: 'POST',
+    headers: {
+      accept: 'application/vnd.github+json',
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+      'user-agent': 'undrdr-submit-intake',
+      'x-github-api-version': '2022-11-28',
+    },
+    body: JSON.stringify({
+      title: `UND-RDR submission: ${submission.fullName}`,
+      body,
+      ...(labels.length ? { labels } : {}),
+    }),
+  })
+
+  if (!response.ok) throw new Error(`github-issue-${response.status}`)
+
+  const issue = await response.json() as { html_url?: string }
+  return issue.html_url || null
 }
 
 async function forwardToResend(submission: IntakeSubmission) {
@@ -201,8 +247,13 @@ export default async function handler(request: IncomingMessage, response: Server
       status: 'received',
     }
 
-    let delivery: 'webhook' | 'email' | 'validated-only' = 'validated-only'
-    if (await forwardToWebhook(submission)) {
+    let delivery: Delivery = 'validated-only'
+    let reviewUrl: string | null = null
+    const issueUrl = await forwardToGitHubIssue(submission)
+    if (issueUrl) {
+      delivery = 'github-issue'
+      reviewUrl = issueUrl
+    } else if (await forwardToWebhook(submission)) {
       delivery = 'webhook'
     } else if (await forwardToResend(submission)) {
       delivery = 'email'
@@ -218,7 +269,10 @@ export default async function handler(request: IncomingMessage, response: Server
       ok: true,
       submission,
       delivery,
-      message: 'Repository received for review. The live dataset was not changed.',
+      reviewUrl,
+      message: delivery === 'github-issue'
+        ? 'Repository received for review. A review issue was created. The live dataset was not changed.'
+        : 'Repository received for review. The live dataset was not changed.',
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unknown'
