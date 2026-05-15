@@ -237,7 +237,7 @@ export default function GraphCanvas({
     ctx.globalAlpha = 1
 
     animRef.current = requestAnimationFrame(animate)
-  }, [repos, languageGroups, highlightedTemp, searchQuery, hoveredRepo])
+  }, [languageGroups, highlightedTemp, searchQuery, hoveredRepo])
 
   // Start animation
   useEffect(() => {
