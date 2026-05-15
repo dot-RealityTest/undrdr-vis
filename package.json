@@ -7,6 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "verify:domain": "node scripts/verify-domain-build.mjs",
+    "check:github": "node scripts/check-github-repos.mjs",
+    "check:github:apply": "node scripts/check-github-repos.mjs --apply",
+    "check:github:sample": "node scripts/check-github-repos.mjs --limit 10",
+    "submissions:add": "node scripts/add-submission-to-dataset.mjs",
+    "validate:data": "node scripts/validate-data.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
