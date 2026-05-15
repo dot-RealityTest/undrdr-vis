@@ -138,32 +138,30 @@ function gitHubHeaders(token: string) {
   }
 }
 
+function gitHubRepoPath(targetRepo: string) {
+  const [owner, repo] = targetRepo.split('/')
+  if (!owner || !repo) throw new Error('github-repo-invalid')
+  return `${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`
+}
+
 async function findOpenSubmissionIssue(fullName: string) {
   const config = getGitHubIssueConfig()
   if (!config) return null
 
-  const searchUrl = new URL('https://api.github.com/search/issues')
+  const issuesUrl = new URL(`https://api.github.com/repos/${gitHubRepoPath(config.targetRepo)}/issues`)
   const primaryLabel = config.labels[0]
-  const query = [
-    `repo:${config.targetRepo}`,
-    'is:issue',
-    'is:open',
-    'in:title',
-    primaryLabel ? `label:"${primaryLabel}"` : '',
-    `"UND-RDR submission: ${fullName}"`,
-  ].filter(Boolean).join(' ')
+  issuesUrl.searchParams.set('state', 'open')
+  issuesUrl.searchParams.set('per_page', '100')
+  if (primaryLabel) issuesUrl.searchParams.set('labels', primaryLabel)
 
-  searchUrl.searchParams.set('q', query)
-  searchUrl.searchParams.set('per_page', '1')
-
-  const response = await fetch(searchUrl, {
+  const response = await fetch(issuesUrl, {
     headers: gitHubHeaders(config.token),
   })
 
-  if (!response.ok) throw new Error(`github-search-${response.status}`)
+  if (!response.ok) throw new Error(`github-issues-${response.status}`)
 
-  const result = await response.json() as { items?: Array<{ html_url?: string; title?: string }> }
-  const issue = result.items?.find((item) => item.title === `UND-RDR submission: ${fullName}`)
+  const result = await response.json() as Array<{ html_url?: string; title?: string }>
+  const issue = result.find((item) => item.title === `UND-RDR submission: ${fullName}`)
   return issue?.html_url || null
 }
 
@@ -183,7 +181,7 @@ async function forwardToGitHubIssue(submission: IntakeSubmission) {
     'The live dataset was not changed by this submission.',
   ].join('\n')
 
-  const response = await fetch(`https://api.github.com/repos/${config.targetRepo}/issues`, {
+  const response = await fetch(`https://api.github.com/repos/${gitHubRepoPath(config.targetRepo)}/issues`, {
     method: 'POST',
     headers: gitHubHeaders(config.token),
     body: JSON.stringify({
