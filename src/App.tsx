@@ -326,6 +326,15 @@ function App() {
       .catch(() => setReport(null))
   }, [])
 
+  useEffect(() => {
+    function closeWithEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setHoveredRepoId(null)
+    }
+
+    window.addEventListener('keydown', closeWithEscape)
+    return () => window.removeEventListener('keydown', closeWithEscape)
+  }, [])
+
   const languages = useMemo(() => uniq(repos.map((repo) => repo.language || 'Unknown')), [repos])
   const topics = useMemo(() => {
     const counts = new Map<string, number>()
@@ -396,6 +405,14 @@ function App() {
 
   function jumpToIndex() {
     window.requestAnimationFrame(() => document.getElementById('repo-index')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+
+  function handlePreviewRepo(repoId: string | null) {
+    if (repoId) setHoveredRepoId(repoId)
+  }
+
+  function closePreview() {
+    setHoveredRepoId(null)
   }
 
   function applyDiscoveryMode(modeId: DiscoveryModeId) {
@@ -542,7 +559,7 @@ function App() {
       <UpdateReportPanel report={report} />
 
       <SectionHeader eyebrow="Featured" title="High-Signal Finds" detail="Projects with unusual momentum, strong topics, or graduation signals." />
-      <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={setHoveredRepoId} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
+      <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
 
       <section className="split-sections">
         <RepoRail id="new" title="Fresh Finds" repos={newest} />
@@ -576,7 +593,7 @@ function App() {
         </div>
         {!mockUser && <StateBlock title="Log in to save repos" detail="Your watchlist is personal, so this mock keeps it behind a local sign-in state." />}
         {mockUser && favoriteRepos.length === 0 && <StateBlock title="No saved repos yet" detail="Use the star on repo cards to build your personal watchlist." />}
-        {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={setHoveredRepoId} onToggleFavorite={toggleFavorite} />}
+        {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
       </section>
 
       <section className="index-section" id="repo-index" aria-label="Repository index">
@@ -591,10 +608,17 @@ function App() {
         {loadState === 'loading' && <StateBlock title="Loading repo data" detail="Reading the local UND-RDR repository dataset." />}
         {loadState === 'error' && <StateBlock title="Could not load repo data" detail="The app could not read public/data/all_repos.json. The backup copy is preserved in backups/." />}
         {loadState === 'ready' && filtered.length === 0 && <StateBlock title="No results after filters" detail="Try a broader topic, status, or language." />}
-        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={visibleRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={setHoveredRepoId} onToggleFavorite={toggleFavorite} />}
+        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={visibleRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
       </section>
 
-      {hoveredRepo && !selectedRepo && <HoverPreview repo={hoveredRepo} nextRepo={hoveredNextRepo} />}
+      {hoveredRepo && !selectedRepo && (
+        <HoverPreview
+          repo={hoveredRepo}
+          nextRepo={hoveredNextRepo}
+          onClose={closePreview}
+          onPreviewRepo={handlePreviewRepo}
+        />
+      )}
 
       {selectedRepo && (
         <RepoDetailPanel
@@ -867,16 +891,30 @@ function DiscoveryModes({ onSelect }: { onSelect: (modeId: DiscoveryModeId) => v
   )
 }
 
-function HoverPreview({ repo, nextRepo }: { repo: RepoView; nextRepo: RepoView | null }) {
+function HoverPreview({ repo, nextRepo, onClose, onPreviewRepo }: { repo: RepoView; nextRepo: RepoView | null; onClose: () => void; onPreviewRepo: (repoId: string | null) => void }) {
   const iconName = repoSignalIcon(repo)
   const delta = repo.dailyStarDelta || repo.weeklyStarDelta || 0
   const topTopics = repo.allTopics.slice(0, 3)
 
   return (
-    <a className="hover-preview" href={repo.repoUrl} target="_blank" rel="noreferrer" tabIndex={-1} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties} aria-label={`Open ${repo.displayName} on GitHub`}>
-      <p className="hover-preview-kicker"><SignalIcon name={iconName} /> Current signal</p>
+    <aside
+      className="hover-preview"
+      style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}
+      aria-label={`${repo.displayName} preview`}
+      onMouseEnter={() => onPreviewRepo(repo.id)}
+      onMouseLeave={() => onPreviewRepo(null)}
+      onFocus={() => onPreviewRepo(repo.id)}
+      onBlur={(event) => {
+        const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null
+        if (!event.currentTarget.contains(nextTarget)) onPreviewRepo(null)
+      }}
+    >
+      <div className="hover-preview-topline">
+        <p className="hover-preview-kicker"><SignalIcon name={iconName} /> Current signal</p>
+        <button type="button" onClick={onClose} aria-label="Close preview">Close</button>
+      </div>
       <h3>{repo.displayName}</h3>
-      <span>{repo.description || 'No description available yet.'}</span>
+      <span className="hover-preview-description">{repo.description || 'No description available yet.'}</span>
       <div className="hover-preview-reason">
         <strong>Why here</strong>
         <span>{repo.statusReason}</span>
@@ -893,14 +931,16 @@ function HoverPreview({ repo, nextRepo }: { repo: RepoView; nextRepo: RepoView |
         </div>
       )}
       {nextRepo && (
-        <div className="next-signal">
+        <button type="button" className="next-signal" onClick={() => onPreviewRepo(nextRepo.id)}>
           <span>Next signal</span>
           <strong>{nextRepo.displayName}</strong>
           <em>{nextRepo.language || 'Unknown'} · {formatNumber(nextRepo.stars)} stars</em>
-        </div>
+        </button>
       )}
-      <b>Open repo</b>
-    </a>
+      <a className="hover-preview-open" href={repo.repoUrl} target="_blank" rel="noreferrer">
+        Open on GitHub
+      </a>
+    </aside>
   )
 }
 

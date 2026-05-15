@@ -693,8 +693,15 @@ textarea {
   animation: preview-in 140ms ease both;
 }
 
+.hover-preview-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .hover-preview-kicker {
-  margin: 0 0 10px;
+  margin: 0;
   color: var(--status-color, var(--blue));
   display: inline-flex;
   align-items: center;
@@ -705,15 +712,32 @@ textarea {
   text-transform: uppercase;
 }
 
+.hover-preview-topline button {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.hover-preview-topline button:hover,
+.hover-preview-topline button:focus-visible {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
 .hover-preview h3 {
-  margin: 0;
+  margin: 10px 0 0;
   font-size: 30px;
   line-height: 0.98;
   letter-spacing: 0;
   word-break: break-word;
 }
 
-.hover-preview > span {
+.hover-preview-description {
   display: -webkit-box;
   margin-top: 10px;
   overflow: hidden;
@@ -795,10 +819,20 @@ textarea {
 }
 
 .next-signal {
+  width: 100%;
   margin-top: 12px;
   padding: 10px;
   border: 1px solid rgba(17, 19, 18, 0.11);
   background: rgba(255, 255, 255, 0.52);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.next-signal:hover,
+.next-signal:focus-visible {
+  border-color: color-mix(in srgb, var(--status-color, var(--blue)) 44%, var(--line));
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .next-signal strong,
@@ -825,17 +859,24 @@ textarea {
   font-weight: 760;
 }
 
-.hover-preview b {
+.hover-preview-open {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 14px;
-  color: var(--status-color, var(--blue));
+  min-height: 36px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: #fff;
+  padding: 0 12px;
   font-size: 12px;
   font-weight: 850;
 }
 
-.hover-preview:hover b {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.hover-preview-open:hover,
+.hover-preview-open:focus-visible {
+  background: transparent;
+  color: var(--ink);
 }
 
 @keyframes preview-in {
