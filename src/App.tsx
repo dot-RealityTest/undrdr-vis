@@ -453,7 +453,10 @@ function App() {
     <main className="app-shell">
       <a className="skip-link" href="#repo-index">Skip to Repository Index</a>
       <header className="site-header">
-        <a className="wordmark" href="#discover" aria-label="UND-RDR home">UND-RDR</a>
+        <a className="wordmark" href="#discover" aria-label="UND-RDR home">
+          <img className="wordmark-mark" src="./assets/undrdr-discovery-icon.png" alt="" aria-hidden="true" />
+          <span>UND-RDR</span>
+        </a>
         <nav aria-label="Primary navigation">
           {NAV_ITEMS.map((item) => <a key={item.id} href={`#${item.id}`}>{item.label}</a>)}
         </nav>

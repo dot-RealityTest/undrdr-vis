@@ -92,9 +92,21 @@ textarea:focus-visible {
 }
 
 .wordmark {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font-weight: 900;
   font-size: 20px;
   letter-spacing: 0;
+}
+
+.wordmark-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  object-fit: cover;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 10px 22px rgba(17, 19, 18, 0.12);
 }
 
 .site-header nav {
