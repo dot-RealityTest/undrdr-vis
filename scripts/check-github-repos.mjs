@@ -7,6 +7,7 @@ const MIN_REPO_COUNT = 683
 const options = parseArgs(process.argv.slice(2))
 const dataPath = path.resolve(options.data || DEFAULT_DATA_PATH)
 const outputDir = path.resolve(options.outDir || 'data/github-checks')
+const publicReportPath = path.resolve(options.publicReport || 'public/data/update-report.json')
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || ''
 const now = new Date().toISOString()
 
@@ -83,8 +84,11 @@ if (options.apply) {
   fs.mkdirSync(path.dirname(backupPath), { recursive: true })
   fs.copyFileSync(dataPath, backupPath)
   fs.writeFileSync(dataPath, `${JSON.stringify(nextRepos, null, 2)}\n`)
+  fs.mkdirSync(path.dirname(publicReportPath), { recursive: true })
+  fs.writeFileSync(publicReportPath, `${JSON.stringify(report, null, 2)}\n`)
   console.log(`- applied live data update: ${dataPath}`)
   console.log(`- pre-apply backup: ${backupPath}`)
+  console.log(`- public update report: ${publicReportPath}`)
 } else {
   console.log(`- dry-run snapshot: ${snapshotPath}`)
   console.log(`- dry-run report: ${reportPath}`)
@@ -102,6 +106,7 @@ function parseArgs(args) {
     apply: false,
     data: DEFAULT_DATA_PATH,
     outDir: 'data/github-checks',
+    publicReport: 'public/data/update-report.json',
     delayMs: 350,
     limit: Number.POSITIVE_INFINITY,
   }
@@ -111,6 +116,7 @@ function parseArgs(args) {
     if (arg === '--apply') parsed.apply = true
     else if (arg === '--data') parsed.data = args[++index]
     else if (arg === '--out-dir') parsed.outDir = args[++index]
+    else if (arg === '--public-report') parsed.publicReport = args[++index]
     else if (arg === '--limit') parsed.limit = Number(args[++index])
     else if (arg === '--delay-ms') parsed.delayMs = Number(args[++index])
     else if (arg === '--help') {
@@ -140,6 +146,8 @@ Options:
   --apply           Replace public/data/all_repos.json after writing a backup.
   --data <path>     Dataset path. Default: ${DEFAULT_DATA_PATH}
   --out-dir <path>  Snapshot/report output directory. Default: data/github-checks
+  --public-report <path>
+                    Report written on --apply. Default: public/data/update-report.json
   --delay-ms <n>    Delay between GitHub API calls. Default: 350
 
 Environment:
@@ -304,7 +312,7 @@ function buildReport(before, after, checkedCount, failuresList, checkedAt) {
     statusCounts[status] = (statusCounts[status] || 0) + 1
     const previous = beforeById.get(repoId(repo))
 
-    if (status === 'Crossed 1K') crossed.push(summary(repo, previous))
+    if (status === 'Crossed 1K' && Number(previous?.stars ?? repo.previousStars ?? 0) < 1000) crossed.push(summary(repo, previous))
     if (status === 'Near 1K') near.push(summary(repo, previous))
     if (status === 'Rising') rising.push(summary(repo, previous))
     if (repo.unavailable) unavailable.push(summary(repo, previous))
@@ -312,12 +320,12 @@ function buildReport(before, after, checkedCount, failuresList, checkedAt) {
 
   return {
     checkedAt,
-    source: dataPath,
+    source: path.relative(process.cwd(), dataPath) || dataPath,
     checkedCount,
     totalRepos: after.length,
     statusCounts,
     failures: failuresList,
-    crossedOneK: crossed,
+    crossedOneK: crossed.sort((a, b) => b.dailyStarDelta - a.dailyStarDelta),
     nearOneK: near.sort((a, b) => b.stars - a.stars).slice(0, 25),
     rising: rising.sort((a, b) => b.dailyStarDelta - a.dailyStarDelta).slice(0, 25),
     unavailable,

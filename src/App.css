@@ -190,6 +190,84 @@ select:focus {
   color: var(--amber);
 }
 
+.update-report {
+  max-width: 1480px;
+  margin: 18px auto 0;
+  padding: 0 clamp(18px, 4vw, 56px);
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.update-summary,
+.report-column,
+.report-issues {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 16px;
+}
+
+.update-summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.update-summary h2 {
+  margin: 7px 0 8px;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.update-summary span,
+.report-column > span,
+.report-issues span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.report-column,
+.report-issues {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.report-column strong,
+.report-issues strong {
+  font-size: 13px;
+}
+
+.report-column a {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.report-column a span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-weight: 720;
+}
+
+.report-column a em {
+  color: var(--green);
+  font-style: normal;
+  font-weight: 800;
+}
+
 .section-header {
   max-width: 1480px;
   margin: 72px auto 18px;
@@ -503,6 +581,7 @@ select:focus {
   }
 
   .metrics,
+  .update-report,
   .repo-grid,
   .split-sections,
   .topic-grid,
@@ -523,6 +602,7 @@ select:focus {
 
   .filter-grid,
   .metrics,
+  .update-report,
   .repo-grid,
   .split-sections,
   .topic-grid,

@@ -51,6 +51,28 @@ type RepoView = Repo & {
 
 type LoadState = 'loading' | 'ready' | 'error'
 
+type UpdateReport = {
+  checkedAt: string
+  checkedCount: number
+  totalRepos: number
+  statusCounts: Partial<Record<RepoStatus, number>>
+  failures: Array<{ id: string; reason: string }>
+  crossedOneK: Array<ReportRepo>
+  nearOneK: Array<ReportRepo>
+  rising: Array<ReportRepo>
+  unavailable: Array<ReportRepo>
+}
+
+type ReportRepo = {
+  full_name: string
+  url: string
+  stars: number
+  previousStars?: number
+  dailyStarDelta?: number
+  weeklyStarDelta?: number
+  status: RepoStatus
+}
+
 const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'discover', label: 'Discover' },
   { id: 'new', label: 'New' },
@@ -138,6 +160,7 @@ function normalizeRepo(repo: Repo): RepoView {
 
 function App() {
   const [repos, setRepos] = useState<RepoView[]>([])
+  const [report, setReport] = useState<UpdateReport | null>(null)
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('all')
@@ -159,6 +182,13 @@ function App() {
         setRepos([])
         setLoadState('error')
       })
+  }, [])
+
+  useEffect(() => {
+    fetch(`./data/update-report.json?v=${Date.now()}`, { cache: 'no-store' })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data: UpdateReport | null) => setReport(data))
+      .catch(() => setReport(null))
   }, [])
 
   const languages = useMemo(() => uniq(repos.map((repo) => repo.language || 'Unknown')), [repos])
@@ -265,6 +295,8 @@ function App() {
 
       <StatusBanner loadState={loadState} duplicateCount={duplicates.length} />
 
+      <UpdateReportPanel report={report} />
+
       <SectionHeader eyebrow="Featured" title="Curated Underrated Repos" detail="High-signal projects from the current dataset." />
       <RepoGrid repos={featured} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
 
@@ -324,6 +356,43 @@ function StatusBanner({ loadState, duplicateCount }: { loadState: LoadState; dup
   if (loadState === 'error') return <div className="status-banner error">Failed GitHub update/data load. Showing no repos until the local JSON is available.</div>
   if (duplicateCount > 0) return <div className="status-banner warning">Duplicate repo detected: {duplicateCount} duplicate id group{duplicateCount === 1 ? '' : 's'} need review.</div>
   return <div className="status-banner">Fresh GitHub snapshot loaded. Daily scheduler is prepared, but not connected yet.</div>
+}
+
+function UpdateReportPanel({ report }: { report: UpdateReport | null }) {
+  if (!report) return null
+
+  const topRising = report.rising.slice(0, 4)
+  const crossed = report.crossedOneK.slice(0, 4)
+
+  return (
+    <section className="update-report" aria-label="Latest GitHub check">
+      <div className="update-summary">
+        <p>Latest Check</p>
+        <h2>{formatDate(report.checkedAt)}</h2>
+        <span>{formatNumber(report.checkedCount)} checked · {report.failures.length} need review · {report.statusCounts['Crossed 1K'] || 0} crossed 1K</span>
+      </div>
+      <ReportColumn title="Fresh Crossings" repos={crossed} empty="No new crossings in this report." />
+      <ReportColumn title="Fastest Risers" repos={topRising} empty="No rising repos in this report." />
+      <div className="report-issues">
+        <strong>Attention</strong>
+        <span>{report.failures.length ? `${report.failures.length} repos failed the GitHub check and stayed in the dataset.` : 'No GitHub check failures in the latest report.'}</span>
+      </div>
+    </section>
+  )
+}
+
+function ReportColumn({ title, repos, empty }: { title: string; repos: ReportRepo[]; empty: string }) {
+  return (
+    <div className="report-column">
+      <strong>{title}</strong>
+      {repos.length ? repos.map((repo) => (
+        <a key={repo.full_name} href={repo.url} target="_blank" rel="noreferrer">
+          <span>{repo.full_name}</span>
+          <em>+{formatNumber(repo.dailyStarDelta || 0)}</em>
+        </a>
+      )) : <span>{empty}</span>}
+    </div>
+  )
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
