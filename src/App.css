@@ -27,6 +27,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+[id] { scroll-margin-top: 90px; }
+button, a { touch-action: manipulation; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; }
 button, a, input, select, textarea { transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease; }
@@ -37,6 +39,24 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid rgba(37, 99, 235, 0.78);
   outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  transform: translateY(-150%);
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
 }
 
 .app-shell {
@@ -391,6 +411,8 @@ textarea {
   border-left: 3px solid var(--status-color, var(--blue));
   background: var(--paper);
   box-shadow: 0 8px 24px rgba(17, 19, 18, 0.028);
+  content-visibility: auto;
+  contain-intrinsic-size: 304px;
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
@@ -406,9 +428,11 @@ textarea {
 }
 
 .repo-list .repo-card.compact {
-  padding: 14px;
+  min-height: 0;
+  padding: 12px 14px;
   border-left-width: 2px;
   background: rgba(255, 255, 255, 0.72);
+  contain-intrinsic-size: 188px;
 }
 
 .repo-list .repo-card.compact:hover {
@@ -565,9 +589,9 @@ textarea {
 }
 
 .repo-list .repo-title {
-  margin-top: 10px;
-  font-size: 20px;
-  line-height: 1.12;
+  margin-top: 9px;
+  font-size: 18px;
+  line-height: 1.15;
 }
 
 .repo-list .repo-owner {
@@ -576,9 +600,9 @@ textarea {
 }
 
 .repo-list .repo-description {
-  margin-top: 12px;
-  font-size: 14px;
-  line-height: 1.45;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.42;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -587,8 +611,8 @@ textarea {
 
 .repo-list .repo-tags {
   gap: 5px;
-  margin-top: 12px;
-  max-height: 25px;
+  margin-top: 10px;
+  max-height: 23px;
   overflow: hidden;
 }
 
@@ -598,12 +622,12 @@ textarea {
 }
 
 .repo-list .card-footer {
-  padding-top: 14px;
+  padding-top: 12px;
 }
 
 .repo-list .details-button {
-  min-height: 30px;
-  margin-top: 10px;
+  min-height: 28px;
+  margin-top: 9px;
   padding: 0 10px;
   font-size: 11px;
 }
@@ -622,6 +646,7 @@ textarea {
   width: min(740px, 100vw);
   height: 100vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-left: 1px solid var(--line);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.72), rgba(246,246,243,0.96) 28%),
@@ -1123,9 +1148,9 @@ textarea {
 
 .repo-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .state-block {
@@ -1211,7 +1236,7 @@ textarea {
   }
 
   .repo-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1249,7 +1274,7 @@ textarea {
   }
 
   .repo-list .repo-title {
-    font-size: 19px;
+    font-size: 18px;
   }
 
   .repo-detail {

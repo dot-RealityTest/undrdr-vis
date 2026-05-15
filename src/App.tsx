@@ -330,6 +330,7 @@ function App() {
 
   return (
     <main className="app-shell">
+      <a className="skip-link" href="#repo-index">Skip to Repository Index</a>
       <header className="site-header">
         <a className="wordmark" href="#discover" aria-label="UND-RDR home">UND-RDR</a>
         <nav aria-label="Primary navigation">
@@ -346,7 +347,13 @@ function App() {
         <div className="search-panel" aria-label="Repository search and filters">
           <label className="search-box">
             <span>Search the index</span>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="repo, owner, language, topic..." />
+            <input
+              name="repo-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="repo, owner, language, topic…"
+              autoComplete="off"
+            />
           </label>
           <div className="filter-grid">
             <Select label="Language" value={language} values={languages} onChange={setLanguage} />
@@ -416,7 +423,7 @@ function App() {
         {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onSelectRepo={setSelectedRepoId} onToggleFavorite={toggleFavorite} />}
       </section>
 
-      <section className="index-section" aria-label="Repository index">
+      <section className="index-section" id="repo-index" aria-label="Repository index">
         <div className="index-heading">
           <div>
             <p>Live Browse</p>
@@ -458,10 +465,10 @@ function App() {
 }
 
 function StatusBanner({ loadState, duplicateCount }: { loadState: LoadState; duplicateCount: number }) {
-  if (loadState === 'loading') return <div className="status-banner">Loading repo data from the local snapshot...</div>
-  if (loadState === 'error') return <div className="status-banner error">Failed GitHub update/data load. Showing no repos until the local JSON is available.</div>
-  if (duplicateCount > 0) return <div className="status-banner warning">Duplicate repo detected: {duplicateCount} duplicate id group{duplicateCount === 1 ? '' : 's'} need review.</div>
-  return <div className="status-banner">Fresh GitHub snapshot loaded. Daily scheduler is prepared, but not connected yet.</div>
+  if (loadState === 'loading') return <div className="status-banner" aria-live="polite">Loading repo data from the local snapshot…</div>
+  if (loadState === 'error') return <div className="status-banner error" aria-live="polite">Failed GitHub update/data load. Showing no repos until the local JSON is available.</div>
+  if (duplicateCount > 0) return <div className="status-banner warning" aria-live="polite">Duplicate repo detected: {duplicateCount} duplicate id group{duplicateCount === 1 ? '' : 's'} need review.</div>
+  return <div className="status-banner" aria-live="polite">Fresh GitHub snapshot loaded. Daily scheduler is prepared, but not connected yet.</div>
 }
 
 function AuthControl({ user, favoriteCount, onSignIn, onSignOut }: { user: MockUser | null; favoriteCount: number; onSignIn: () => void; onSignOut: () => void }) {
@@ -556,17 +563,40 @@ function SubmitRepoSection({ existingRepoIds, submissions, onClear, onSubmit }: 
       <form className="submit-form" onSubmit={submit}>
         <label>
           <span>GitHub repo URL</span>
-          <input value={repoUrl} onChange={(event) => setRepoUrl(event.target.value)} placeholder="https://github.com/owner/repo" />
+          <input
+            name="repo-url"
+            type="url"
+            inputMode="url"
+            value={repoUrl}
+            onChange={(event) => setRepoUrl(event.target.value)}
+            placeholder="https://github.com/owner/repo"
+            autoComplete="off"
+            spellCheck={false}
+          />
         </label>
         <label>
           <span>Why should UND-RDR track it?</span>
-          <textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Short reason, topic, or discovery note" rows={4} />
+          <textarea
+            name="repo-reason"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Short reason, topic, or discovery note…"
+            rows={4}
+            autoComplete="off"
+          />
         </label>
         <label>
           <span>Contact optional</span>
-          <input value={contact} onChange={(event) => setContact(event.target.value)} placeholder="email or GitHub handle" />
+          <input
+            name="submitter-contact"
+            value={contact}
+            onChange={(event) => setContact(event.target.value)}
+            placeholder="email or GitHub handle…"
+            autoComplete="off"
+            spellCheck={false}
+          />
         </label>
-        <div className={`submit-note ${isDuplicate ? 'warning' : ''}`}>{message}</div>
+        <div className={`submit-note ${isDuplicate ? 'warning' : ''}`} aria-live="polite">{message}</div>
         <button type="submit">Mock submit</button>
       </form>
       <div className="submission-preview">
