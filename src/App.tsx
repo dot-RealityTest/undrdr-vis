@@ -680,7 +680,8 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onSelectRepo, onToggleFavori
 }
 
 function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onSelectRepo: (repoId: string) => void; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
-  const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : (compact ? 'Login' : 'Login to save')
+  const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
+  const favoriteAriaLabel = isLoggedIn ? `${isFavorite ? 'Remove saved repo' : 'Save repo'}: ${repo.displayName}` : `Log in to save ${repo.displayName}`
 
   return (
     <article className={`repo-card ${compact ? 'compact' : ''}`} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}>
@@ -694,8 +695,9 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
             onClick={() => onToggleFavorite(repo.id)}
             disabled={!isLoggedIn}
             title={isLoggedIn ? favoriteLabel : 'Mock login before saving favorites'}
+            aria-label={favoriteAriaLabel}
           >
-            {favoriteLabel}
+            {compact ? <StarIcon filled={isFavorite} /> : favoriteLabel}
           </button>
         </span>
       </div>
@@ -714,6 +716,14 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
       {!compact && <p className="why-line">{repo.statusReason}</p>}
       <button className="details-button" type="button" onClick={() => onSelectRepo(repo.id)}>Details</button>
     </article>
+  )
+}
+
+function StarIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg className="star-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3.75l2.44 4.94 5.45.79-3.94 3.84.93 5.43L12 16.18 7.12 18.75l.93-5.43-3.94-3.84 5.45-.79L12 3.75z" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
   )
 }
 

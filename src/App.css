@@ -463,6 +463,7 @@ textarea {
 
 .favorite-button {
   min-height: 28px;
+  min-width: 32px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
@@ -471,6 +472,12 @@ textarea {
   font-size: 11px;
   font-weight: 850;
   line-height: 1;
+}
+
+.star-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .favorite-button:hover:not(:disabled),
@@ -585,7 +592,11 @@ textarea {
 
 .repo-list .favorite-button {
   min-height: 26px;
-  padding: 0 8px;
+  min-width: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .repo-list .repo-title {
