@@ -705,7 +705,7 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
             <strong>{repo.statusReason}</strong>
             <span>{deltaLabel}</span>
           </div>
-          <span>{repo.description || 'No description available yet.'}</span>
+          <span className="detail-description">{repo.description || 'No description available yet.'}</span>
         </div>
         <div className="detail-actions">
           <a href={repo.repoUrl} target="_blank" rel="noreferrer">Open on GitHub</a>

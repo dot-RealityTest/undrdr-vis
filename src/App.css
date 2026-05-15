@@ -586,10 +586,12 @@ textarea {
 
 .detail-signal {
   margin-top: 18px;
-  display: flex;
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .detail-signal strong,
@@ -599,9 +601,11 @@ textarea {
   align-items: center;
   border: 1px solid var(--line);
   background: var(--paper);
-  padding: 0 10px;
+  padding: 0 11px;
   font-size: 12px;
   font-weight: 820;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .detail-signal strong {
@@ -612,7 +616,7 @@ textarea {
   color: var(--green);
 }
 
-.detail-hero span {
+.detail-description {
   display: block;
   max-width: 640px;
   margin-top: 20px;
