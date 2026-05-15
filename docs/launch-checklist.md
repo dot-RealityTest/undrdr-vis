@@ -85,10 +85,44 @@ Current verified preview:
 
 ## Connect Domain
 
-Only after preview verification:
+Domain attachment status:
 
-- Add `undrdr.com` to the new Vercel project.
-- Configure DNS as Vercel instructs.
+- `undrdr.com` is added to the `undrdr` Vercel project.
+- `www.undrdr.com` is added to the `undrdr` Vercel project.
+- Both aliases point to the current deployment in Vercel.
+- DNS is still at GoDaddy nameservers: `ns19.domaincontrol.com`, `ns20.domaincontrol.com`.
+- The domain currently returns a GoDaddy parked/lander page until DNS changes.
+
+Set these DNS records at GoDaddy:
+
+```text
+Type  Name  Value
+A     @     76.76.21.21
+A     www   76.76.21.21
+```
+
+Remove or replace the current parked apex A records:
+
+```text
+A     @     3.33.130.190
+A     @     15.197.148.33
+```
+
+Remove or replace the current `www` CNAME if GoDaddy will not allow an `A www` record while it exists:
+
+```text
+CNAME www   undrdr.com
+```
+
+Alternative Vercel DNS option:
+
+```text
+Nameserver  ns1.vercel-dns.com
+Nameserver  ns2.vercel-dns.com
+```
+
+After DNS propagation:
+
 - Keep `akakika.com/undrdr/` available as the old location.
 - Verify canonical, Open Graph URL, Twitter image, and JSON-LD point to `https://undrdr.com/`.
 
