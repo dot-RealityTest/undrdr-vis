@@ -117,8 +117,8 @@ async function forwardToWebhook(submission: IntakeSubmission) {
 }
 
 function getGitHubIssueConfig() {
-  const token = process.env.SUBMISSIONS_GITHUB_TOKEN
-  const targetRepo = process.env.SUBMISSIONS_GITHUB_REPO
+  const token = process.env.SUBMISSIONS_GITHUB_TOKEN?.trim()
+  const targetRepo = process.env.SUBMISSIONS_GITHUB_REPO?.trim()
   const labels = (process.env.SUBMISSIONS_GITHUB_LABELS || '')
     .split(',')
     .map((label) => label.trim())
