@@ -5,6 +5,7 @@ import './App.css'
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
 type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'favorites' | 'submit' | 'about'
 type SortMode = 'curated' | 'stars' | 'newest' | 'rising' | 'updated' | 'closest'
+type DiscoveryModeId = 'surprise' | 'rising' | 'fresh' | 'almost' | 'local' | 'agents' | 'apple'
 
 type Repo = {
   name: string
@@ -91,13 +92,22 @@ const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'near', label: 'Near 1K' },
   { id: 'crossed', label: 'Crossed 1K' },
   { id: 'topics', label: 'Topics' },
-  { id: 'favorites', label: 'Favorites' },
+  { id: 'favorites', label: 'Watchlist' },
   { id: 'submit', label: 'Submit' },
   { id: 'about', label: 'About' },
 ]
 
 const STATUS_OPTIONS: Array<'all' | RepoStatus> = ['all', 'Underrated', 'Rising', 'Near 1K', 'Crossed 1K', 'Archived/Inactive']
 type SignalIconName = 'agent' | 'mcp' | 'apple' | 'cli' | 'local' | 'automation' | 'security' | 'web' | 'data' | 'repo' | 'github'
+const DISCOVERY_MODES: Array<{ id: DiscoveryModeId; label: string; detail: string; icon: SignalIconName }> = [
+  { id: 'surprise', label: 'Surprise me', detail: 'Jump to one signal', icon: 'repo' },
+  { id: 'rising', label: 'Fast risers', detail: 'Momentum first', icon: 'automation' },
+  { id: 'fresh', label: 'Fresh finds', detail: 'Newest seen', icon: 'github' },
+  { id: 'almost', label: 'Almost famous', detail: 'Near 1K', icon: 'web' },
+  { id: 'local', label: 'Local AI', detail: 'Private and self-hosted', icon: 'local' },
+  { id: 'agents', label: 'Agents', detail: 'Agentic tools', icon: 'agent' },
+  { id: 'apple', label: 'Apple/macOS', detail: 'Mac-native finds', icon: 'apple' },
+]
 const SIGNAL_KEY: Array<{ icon: SignalIconName; label: string }> = [
   { icon: 'agent', label: 'Agents' },
   { icon: 'local', label: 'Local AI' },
@@ -170,6 +180,14 @@ function statusReason(status: RepoStatus) {
   return 'Still below 1,000 stars'
 }
 
+function statusDisplayLabel(status: RepoStatus) {
+  if (status === 'Crossed 1K') return 'Graduated'
+  if (status === 'Near 1K') return 'Almost famous'
+  if (status === 'Rising') return 'Heating up'
+  if (status === 'Archived/Inactive') return 'Inactive'
+  return 'Underrated'
+}
+
 function repoSignalIcon(repo: RepoView): SignalIconName {
   const text = [repo.displayName, repo.description, repo.language, ...repo.allTopics].join(' ').toLowerCase()
   if (/(mcp|model-context-protocol)/.test(text)) return 'mcp'
@@ -182,6 +200,24 @@ function repoSignalIcon(repo: RepoView): SignalIconName {
   if (/(react|web|frontend|next|html|css|dashboard)/.test(text)) return 'web'
   if (/(data|ml|machine-learning|analytics|rag|vector)/.test(text)) return 'data'
   return 'repo'
+}
+
+function relatedReposFor(repo: RepoView, repos: RepoView[], limit = 4) {
+  const selectedTopics = new Set(repo.allTopics)
+
+  return repos
+    .filter((candidate) => candidate.id !== repo.id)
+    .map((candidate) => {
+      const sharedTopics = candidate.allTopics.filter((item) => selectedTopics.has(item)).length
+      const languageMatch = candidate.language && repo.language && candidate.language === repo.language ? 2 : 0
+      const statusMatch = candidate.statusLabel === repo.statusLabel ? 1.5 : 0
+      const starCloseness = Math.max(0, 1 - Math.abs(candidate.stars - repo.stars) / 1000)
+      return { repo: candidate, score: sharedTopics * 3 + languageMatch + statusMatch + starCloseness }
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || b.repo.growthScore - a.repo.growthScore)
+    .slice(0, limit)
+    .map((item) => item.repo)
 }
 
 function inferStatus(repo: Repo): { label: RepoStatus; reason: string } {
@@ -322,28 +358,64 @@ function App() {
   const favoriteRepos = useMemo(() => repos.filter((repo) => favoriteSet.has(repo.id)), [repos, favoriteSet])
   const selectedRepo = useMemo(() => repos.find((repo) => repo.id === selectedRepoId) || null, [repos, selectedRepoId])
   const hoveredRepo = useMemo(() => repos.find((repo) => repo.id === hoveredRepoId) || null, [repos, hoveredRepoId])
+  const hoveredNextRepo = useMemo(() => hoveredRepo ? relatedReposFor(hoveredRepo, repos, 1)[0] || null : null, [hoveredRepo, repos])
   const visibleRepos = useMemo(() => filtered.slice(0, 80), [filtered])
   const selectedBrowseIndex = selectedRepo ? visibleRepos.findIndex((repo) => repo.id === selectedRepo.id) : -1
   const previousRepo = selectedBrowseIndex > 0 ? visibleRepos[selectedBrowseIndex - 1] : null
   const nextRepo = selectedBrowseIndex >= 0 && selectedBrowseIndex < visibleRepos.length - 1 ? visibleRepos[selectedBrowseIndex + 1] : null
-  const relatedRepos = useMemo(() => {
-    if (!selectedRepo) return []
-    const selectedTopics = new Set(selectedRepo.allTopics)
+  const relatedRepos = useMemo(() => selectedRepo ? relatedReposFor(selectedRepo, repos, 4) : [], [repos, selectedRepo])
 
-    return repos
-      .filter((repo) => repo.id !== selectedRepo.id)
-      .map((repo) => {
-        const sharedTopics = repo.allTopics.filter((item) => selectedTopics.has(item)).length
-        const languageMatch = repo.language && selectedRepo.language && repo.language === selectedRepo.language ? 2 : 0
-        const statusMatch = repo.statusLabel === selectedRepo.statusLabel ? 1.5 : 0
-        const starCloseness = Math.max(0, 1 - Math.abs(repo.stars - selectedRepo.stars) / 1000)
-        return { repo, score: sharedTopics * 3 + languageMatch + statusMatch + starCloseness }
-      })
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score || b.repo.growthScore - a.repo.growthScore)
-      .slice(0, 4)
-      .map((item) => item.repo)
-  }, [repos, selectedRepo])
+  function jumpToIndex() {
+    window.requestAnimationFrame(() => document.getElementById('repo-index')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+
+  function applyDiscoveryMode(modeId: DiscoveryModeId) {
+    setLanguage('all')
+    setTopic('all')
+    setStatus('all')
+    setQuery('')
+
+    if (modeId === 'surprise') {
+      const pool = repos.length ? repos : filtered
+      const repo = pool[Math.floor(Math.random() * Math.max(pool.length, 1))]
+      if (repo) {
+        setQuery(repo.displayName)
+        setHoveredRepoId(repo.id)
+      }
+      setSort('curated')
+    }
+
+    if (modeId === 'rising') {
+      setStatus('Rising')
+      setSort('rising')
+    }
+
+    if (modeId === 'fresh') {
+      setSort('newest')
+    }
+
+    if (modeId === 'almost') {
+      setStatus('Near 1K')
+      setSort('closest')
+    }
+
+    if (modeId === 'local') {
+      setQuery('local')
+      setSort('curated')
+    }
+
+    if (modeId === 'agents') {
+      setQuery('agent')
+      setSort('rising')
+    }
+
+    if (modeId === 'apple') {
+      setQuery('macos')
+      setSort('updated')
+    }
+
+    jumpToIndex()
+  }
 
   function handleMockSubmit(submission: MockSubmission) {
     const next = [submission, ...submissions].slice(0, 20)
@@ -389,8 +461,8 @@ function App() {
 
       <section className="hero" id="discover">
         <div className="hero-copy">
-          <h1>Discover the repos before everybody knows them.</h1>
-          <p>UND-RDR tracks underrated GitHub projects before they become famous. Browse the living index by signal, topic, momentum, and distance from 1,000 stars.</p>
+          <h1>{formatNumber(stats.total)} under-the-radar GitHub repos.</h1>
+          <p>Browse what is heating up before it gets obvious. Hover for the signal, click a card to open the repo, and keep moving from one find to the next.</p>
         </div>
         <div className="search-panel" aria-label="Repository search and filters">
           <label className="search-box">
@@ -421,12 +493,14 @@ function App() {
         </div>
       </section>
 
+      <DiscoveryModes onSelect={applyDiscoveryMode} />
+
       <section className="metrics" aria-label="Dataset summary">
         <Metric label="Repos tracked" value={stats.total} />
         <Metric label="Under 1K" value={stats.underOneK} />
-        <Metric label="Rising now" value={stats.rising} />
-        <Metric label="Near 1K" value={stats.near} />
-        <Metric label="Crossed 1K" value={stats.crossed} />
+        <Metric label="Heating up" value={stats.rising} />
+        <Metric label="Almost famous" value={stats.near} />
+        <Metric label="Graduated" value={stats.crossed} />
       </section>
 
       <SignalSystem />
@@ -435,14 +509,14 @@ function App() {
 
       <UpdateReportPanel report={report} />
 
-      <SectionHeader eyebrow="Featured" title="Curated Underrated Repos" detail="High-signal projects from the current dataset." />
+      <SectionHeader eyebrow="Featured" title="High-Signal Finds" detail="Projects with unusual momentum, strong topics, or graduation signals." />
       <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={setHoveredRepoId} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
 
       <section className="split-sections">
-        <RepoRail id="new" title="Newest Additions" repos={newest} />
-        <RepoRail id="rising" title="Rising Repos" repos={rising} />
-        <RepoRail id="near" title="Close To 1,000" repos={nearOneK} />
-        <RepoRail id="crossed" title="Crossed 1K" repos={crossed} emptyDetail="No graduated repos are present in this snapshot yet." />
+        <RepoRail id="new" title="Fresh Finds" repos={newest} />
+        <RepoRail id="rising" title="Heating Up" repos={rising} />
+        <RepoRail id="near" title="Almost Famous" repos={nearOneK} />
+        <RepoRail id="crossed" title="Graduated" repos={crossed} emptyDetail="No graduated repos are present in this snapshot yet." />
       </section>
 
       <section className="topics-section" id="topics">
@@ -460,16 +534,16 @@ function App() {
 
       <SubmitRepoSection existingRepoIds={repoIds} submissions={submissions} onClear={clearMockSubmissions} onSubmit={handleMockSubmit} />
 
-      <section className="favorites-section" id="favorites" aria-label="Favorite repositories">
+      <section className="favorites-section" id="favorites" aria-label="Repository watchlist">
         <div className="index-heading">
           <div>
-            <p>Saved</p>
-            <h2>{mockUser ? `${favoriteRepos.length} favorites` : 'Favorites require login'}</h2>
+            <p>Watchlist</p>
+            <h2>{mockUser ? `${favoriteRepos.length} saved repos` : 'Watchlist requires login'}</h2>
           </div>
           {!mockUser && <button className="reset-button" onClick={mockSignIn}>Mock login</button>}
         </div>
-        {!mockUser && <StateBlock title="Log in to favorite repos" detail="Favorites are personal, so this mock keeps them behind a local sign-in state." />}
-        {mockUser && favoriteRepos.length === 0 && <StateBlock title="No favorites yet" detail="Use the Save button on repo cards to build your personal watchlist." />}
+        {!mockUser && <StateBlock title="Log in to save repos" detail="Your watchlist is personal, so this mock keeps it behind a local sign-in state." />}
+        {mockUser && favoriteRepos.length === 0 && <StateBlock title="No saved repos yet" detail="Use the star on repo cards to build your personal watchlist." />}
         {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={setHoveredRepoId} onToggleFavorite={toggleFavorite} />}
       </section>
 
@@ -488,7 +562,7 @@ function App() {
         {loadState === 'ready' && filtered.length > 0 && <RepoList repos={visibleRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={setHoveredRepoId} onToggleFavorite={toggleFavorite} />}
       </section>
 
-      {hoveredRepo && !selectedRepo && <HoverPreview repo={hoveredRepo} />}
+      {hoveredRepo && !selectedRepo && <HoverPreview repo={hoveredRepo} nextRepo={hoveredNextRepo} />}
 
       {selectedRepo && (
         <RepoDetailPanel
@@ -511,9 +585,9 @@ function App() {
         </div>
         <div className="about-grid">
           <Definition title="Underrated" detail="A project still under 1,000 stars." />
-          <Definition title="Rising" detail="A project with star growth or curated momentum signals." />
-          <Definition title="Near 1K" detail="A project close to crossing the 1,000-star threshold." />
-          <Definition title="Crossed 1K" detail="A project that graduated from underrated into wider visibility." />
+          <Definition title="Heating up" detail="A project with star growth or curated momentum signals." />
+          <Definition title="Almost famous" detail="A project close to crossing the 1,000-star threshold." />
+          <Definition title="Graduated" detail="A project that crossed 1,000 stars and left the underrated zone." />
         </div>
       </section>
     </main>
@@ -703,21 +777,58 @@ function SignalSystem() {
   )
 }
 
-function HoverPreview({ repo }: { repo: RepoView }) {
+function DiscoveryModes({ onSelect }: { onSelect: (modeId: DiscoveryModeId) => void }) {
+  return (
+    <section className="discovery-modes" aria-label="Discovery modes">
+      <div>
+        <p>Discovery modes</p>
+        <span>Pick a path through the index.</span>
+      </div>
+      <div className="mode-buttons">
+        {DISCOVERY_MODES.map((mode) => (
+          <button key={mode.id} type="button" onClick={() => onSelect(mode.id)}>
+            <SignalIcon name={mode.icon} />
+            <strong>{mode.label}</strong>
+            <span>{mode.detail}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function HoverPreview({ repo, nextRepo }: { repo: RepoView; nextRepo: RepoView | null }) {
   const iconName = repoSignalIcon(repo)
   const delta = repo.dailyStarDelta || repo.weeklyStarDelta || 0
+  const topTopics = repo.allTopics.slice(0, 3)
 
   return (
     <a className="hover-preview" href={repo.repoUrl} target="_blank" rel="noreferrer" tabIndex={-1} style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties} aria-label={`Open ${repo.displayName} on GitHub`}>
-      <p className="hover-preview-kicker"><SignalIcon name={iconName} /> Current Hover</p>
+      <p className="hover-preview-kicker"><SignalIcon name={iconName} /> Current signal</p>
       <h3>{repo.displayName}</h3>
       <span>{repo.description || 'No description available yet.'}</span>
+      <div className="hover-preview-reason">
+        <strong>Why here</strong>
+        <span>{repo.statusReason}</span>
+      </div>
       <div className="hover-preview-meta">
         <em><SignalIcon name="github" />{repo.ownerName}/{repo.name}</em>
         <strong>{formatNumber(repo.stars)} stars</strong>
         <em>{repo.language || 'Unknown'}</em>
         {delta > 0 && <strong>+{formatNumber(delta)} signal</strong>}
       </div>
+      {topTopics.length > 0 && (
+        <div className="hover-preview-topics" aria-hidden="true">
+          {topTopics.map((item) => <span key={item}>{item}</span>)}
+        </div>
+      )}
+      {nextRepo && (
+        <div className="next-signal">
+          <span>Next signal</span>
+          <strong>{nextRepo.displayName}</strong>
+          <em>{nextRepo.language || 'Unknown'} · {formatNumber(nextRepo.stars)} stars</em>
+        </div>
+      )}
       <b>Open repo</b>
     </a>
   )
@@ -774,7 +885,7 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onPreviewRepo, onToggleFavor
 function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorite, compact = false }: { repo: RepoView; isFavorite: boolean; isLoggedIn: boolean; onPreviewRepo: (repoId: string | null) => void; onToggleFavorite: (repoId: string) => void; compact?: boolean }) {
   const favoriteLabel = isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Login to save'
   const favoriteAriaLabel = isLoggedIn ? `${isFavorite ? 'Remove saved repo' : 'Save repo'}: ${repo.displayName}` : `Log in to save ${repo.displayName}`
-  const repoOpenLabel = `Open ${repo.displayName} on GitHub. ${repo.statusLabel}. ${formatNumber(repo.stars)} stars. ${repo.language || 'Unknown'} repository.`
+  const repoOpenLabel = `Open ${repo.displayName} on GitHub. ${statusDisplayLabel(repo.statusLabel)}. ${formatNumber(repo.stars)} stars. ${repo.language || 'Unknown'} repository.`
   const iconName = repoSignalIcon(repo)
 
   return (
@@ -791,7 +902,7 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorit
     >
       <a className="card-open-link" href={repo.repoUrl} target="_blank" rel="noreferrer" aria-label={repoOpenLabel} title={`Open ${repo.displayName} on GitHub`} />
       <div className="card-topline">
-        <span className="status-badge">{!compact && <SignalIcon name={iconName} />}{repo.statusLabel}</span>
+        <span className="status-badge">{!compact && <SignalIcon name={iconName} />}{statusDisplayLabel(repo.statusLabel)}</span>
         <span className="card-actions">
           <span>{repo.language || 'Unknown'}</span>
           <button
@@ -873,7 +984,7 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
     <div className="detail-backdrop" role="presentation" onClick={onClose}>
       <aside className="repo-detail" aria-label={`${repo.displayName} details`} onClick={(event) => event.stopPropagation()}>
         <div className="detail-topline" style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}>
-          <span className="detail-status">{repo.statusLabel}</span>
+          <span className="detail-status">{statusDisplayLabel(repo.statusLabel)}</span>
           <button type="button" onClick={onClose}>Close</button>
         </div>
         <div className="detail-hero">
@@ -921,7 +1032,7 @@ function RepoDetailPanel({ repo, isFavorite, isLoggedIn, onClose, onToggleFavori
             <div className="related-repos">
               {relatedRepos.map((related) => (
                 <button key={related.id} type="button" onClick={() => onSelectRepo(related.id)} style={{ '--status-color': statusColor(related.statusLabel) } as CSSProperties}>
-                  <span><SignalIcon name={repoSignalIcon(related)} />{related.statusLabel}</span>
+                  <span><SignalIcon name={repoSignalIcon(related)} />{statusDisplayLabel(related.statusLabel)}</span>
                   <strong>{related.displayName}</strong>
                   <em><SignalIcon name="github" />{related.language || 'Unknown'} · {formatNumber(related.stars)} stars</em>
                 </button>
