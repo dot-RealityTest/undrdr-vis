@@ -89,17 +89,24 @@ function uniq(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b))
 }
 
+function statusReason(status: RepoStatus) {
+  if (status === 'Crossed 1K') return 'Graduated past the underrated threshold'
+  if (status === 'Near 1K') return 'Close to crossing 1,000 stars'
+  if (status === 'Rising') return 'Star growth or curated momentum signal'
+  if (status === 'Archived/Inactive') return 'Repository appears unavailable or inactive'
+  return 'Still below 1,000 stars'
+}
+
 function inferStatus(repo: Repo): { label: RepoStatus; reason: string } {
-  if (repo.status) return { label: repo.status, reason: 'Stored status' }
+  if (repo.status) return { label: repo.status, reason: statusReason(repo.status) }
   if (repo.archived || repo.disabled) return { label: 'Archived/Inactive', reason: 'Repository appears unavailable or inactive' }
   if (repo.stars >= 1000) return { label: 'Crossed 1K', reason: 'Graduated past the underrated threshold' }
   if (repo.stars >= 900) return { label: 'Near 1K', reason: 'Close to crossing 1,000 stars' }
 
   const daily = repo.dailyStarDelta || 0
   const weekly = repo.weeklyStarDelta || 0
-  const recent = daysSince(repo.pushed_at || repo.updated_at) <= 30
-  if (daily >= 3 || weekly >= 12 || (repo.is_gem && recent) || repo.wave === 'rising') {
-    return { label: 'Rising', reason: 'Recent activity or curated momentum signal' }
+  if (daily >= 3 || weekly >= 12 || repo.wave === 'rising') {
+    return { label: 'Rising', reason: 'Star growth or curated momentum signal' }
   }
 
   return { label: 'Underrated', reason: 'Still below 1,000 stars' }
@@ -139,7 +146,7 @@ function App() {
   const [sort, setSort] = useState<SortMode>('curated')
 
   useEffect(() => {
-    fetch('./data/all_repos.json')
+    fetch(`./data/all_repos.json?v=${Date.now()}`, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load ${res.status}`)
         return res.json()
@@ -169,7 +176,7 @@ function App() {
 
   const stats = useMemo(() => ({
     total: repos.length,
-    underrated: repos.filter((repo) => repo.statusLabel === 'Underrated').length,
+    underOneK: repos.filter((repo) => repo.stars < 1000).length,
     rising: repos.filter((repo) => repo.statusLabel === 'Rising').length,
     near: repos.filter((repo) => repo.statusLabel === 'Near 1K').length,
     crossed: repos.filter((repo) => repo.statusLabel === 'Crossed 1K').length,
@@ -250,7 +257,7 @@ function App() {
 
       <section className="metrics" aria-label="Dataset summary">
         <Metric label="Repos tracked" value={stats.total} />
-        <Metric label="Still underrated" value={stats.underrated} />
+        <Metric label="Under 1K" value={stats.underOneK} />
         <Metric label="Rising now" value={stats.rising} />
         <Metric label="Near 1K" value={stats.near} />
         <Metric label="Crossed 1K" value={stats.crossed} />
@@ -303,7 +310,7 @@ function App() {
         </div>
         <div className="about-grid">
           <Definition title="Underrated" detail="A project still under 1,000 stars." />
-          <Definition title="Rising" detail="A project with growth, recency, or curated momentum signals." />
+          <Definition title="Rising" detail="A project with star growth or curated momentum signals." />
           <Definition title="Near 1K" detail="A project close to crossing the 1,000-star threshold." />
           <Definition title="Crossed 1K" detail="A project that graduated from underrated into wider visibility." />
         </div>
@@ -316,7 +323,7 @@ function StatusBanner({ loadState, duplicateCount }: { loadState: LoadState; dup
   if (loadState === 'loading') return <div className="status-banner">Loading repo data from the local snapshot...</div>
   if (loadState === 'error') return <div className="status-banner error">Failed GitHub update/data load. Showing no repos until the local JSON is available.</div>
   if (duplicateCount > 0) return <div className="status-banner warning">Duplicate repo detected: {duplicateCount} duplicate id group{duplicateCount === 1 ? '' : 's'} need review.</div>
-  return <div className="status-banner">Local dataset loaded. Daily GitHub updates are prepared for, but not connected yet.</div>
+  return <div className="status-banner">Fresh GitHub snapshot loaded. Daily scheduler is prepared, but not connected yet.</div>
 }
 
 function Metric({ label, value }: { label: string; value: number }) {

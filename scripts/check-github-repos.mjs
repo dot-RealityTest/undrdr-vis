@@ -216,12 +216,13 @@ function mergeGitHubMetadata(repo, metadata, checkedAt) {
 
   return {
     ...repo,
-    id: repo.id || `${metadata.owner?.login || repo.owner}/${metadata.name || repo.name}`.toLowerCase(),
+    id: repo.id || repoId(repo),
+    githubFullName: metadata.full_name || repo.githubFullName || repo.full_name,
     repoUrl: metadata.html_url || repo.repoUrl || repo.url,
     url: metadata.html_url || repo.url,
     owner: metadata.owner?.login || repo.owner,
     name: metadata.name || repo.name,
-    full_name: metadata.full_name || repo.full_name,
+    full_name: repo.full_name || metadata.full_name,
     description: metadata.description || repo.description || '',
     previousStars,
     stars,
@@ -268,7 +269,7 @@ function inferStatus(repo) {
   if (repo.archived || repo.disabled) return 'Archived/Inactive'
   if (Number(repo.stars || 0) >= 1000) return 'Crossed 1K'
   if (Number(repo.stars || 0) >= 900) return 'Near 1K'
-  if (Number(repo.dailyStarDelta || 0) >= 3 || Number(repo.weeklyStarDelta || 0) >= 12 || daysSince(repo.pushed_at || repo.updated_at) <= 7) {
+  if (Number(repo.dailyStarDelta || 0) >= 3 || Number(repo.weeklyStarDelta || 0) >= 12) {
     return 'Rising'
   }
   return 'Underrated'
@@ -279,8 +280,12 @@ function validateNoDataLoss(before, after) {
     throw new Error(`Refusing to write: repo count changed from ${before.length} to ${after.length}`)
   }
 
-  const beforeIds = new Set(before.map(repoId))
-  const missing = after.filter((repo) => !beforeIds.has(repoId(repo)))
+  const missing = before.filter((repo, index) => {
+    const beforeId = repoId(repo)
+    const afterRepo = after[index]
+    return beforeId !== repoId(afterRepo) && beforeId !== String(afterRepo.id || '').toLowerCase()
+  })
+
   if (missing.length) {
     throw new Error(`Refusing to write: repo identity changed for ${missing.length} records`)
   }
