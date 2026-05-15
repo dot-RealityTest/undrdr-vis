@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated UND-RDR check snapshots
+data/github-checks/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

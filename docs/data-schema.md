@@ -80,3 +80,27 @@ The validator confirms:
 - no repo count loss below the current 683 baseline
 - duplicate repo ids are surfaced
 - under-1K and crossed-1K counts are reported
+
+## Daily GitHub Check
+
+The first automation layer is available as a safe dry run:
+
+```bash
+npm run check:github:sample
+```
+
+For a full check:
+
+```bash
+GITHUB_TOKEN=... npm run check:github
+```
+
+By default this writes a timestamped snapshot and report under `data/github-checks/` and does not touch `public/data/all_repos.json`.
+
+To apply the checked snapshot to the live dataset:
+
+```bash
+GITHUB_TOKEN=... npm run check:github -- --apply
+```
+
+The apply path first writes a pre-apply backup under `backups/`, then refuses to continue if repo count or repo identities are lost.

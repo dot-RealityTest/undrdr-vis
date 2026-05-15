@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "check:github": "node scripts/check-github-repos.mjs",
+    "check:github:sample": "node scripts/check-github-repos.mjs --limit 10",
     "validate:data": "node scripts/validate-data.mjs",
     "preview": "vite preview"
   },
