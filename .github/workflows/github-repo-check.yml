@@ -2,12 +2,16 @@ name: UND-RDR GitHub repo check
 
 on:
   workflow_dispatch:
-  # Enable after launch if you want GitHub to update the dataset every day.
-  # schedule:
-  #   - cron: '17 5 * * *'
+  schedule:
+    - cron: '17 5 * * *'
 
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: undrdr-github-repo-check
+  cancel-in-progress: false
 
 jobs:
   check-repos:
@@ -25,6 +29,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Prepare update branch
+        run: |
+          BRANCH="automation/github-repo-snapshot"
+          git fetch origin "$BRANCH" || true
+          git checkout -B "$BRANCH"
+
       - name: Update GitHub repo snapshot
         run: npm run check:github:apply -- --delay-ms 350
         env:
@@ -33,10 +43,34 @@ jobs:
       - name: Validate data
         run: npm run validate:data
 
-      - name: Commit updated snapshot
+      - name: Open snapshot update PR
+        id: snapshot-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BRANCH="automation/github-repo-snapshot"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/data/all_repos.json public/data/update-report.json backups/pre-github-check-*.json
-          git diff --cached --quiet || git commit -m "Update UND-RDR GitHub repo snapshot"
-          git push
+
+          if git diff --cached --quiet; then
+            echo "No GitHub snapshot changes to review."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "Update UND-RDR GitHub repo snapshot"
+          git push --force-with-lease origin "$BRANCH"
+
+          if gh pr view "$BRANCH" --json number --jq .number >/tmp/undrdr-pr-number 2>/dev/null; then
+            PR_NUMBER="$(cat /tmp/undrdr-pr-number)"
+            gh pr comment "$PR_NUMBER" --body "Daily GitHub snapshot refreshed. Please review repo count, crossings, rising projects, and unavailable repos before merging."
+          else
+            gh pr create \
+              --base "${{ github.event.repository.default_branch }}" \
+              --head "$BRANCH" \
+              --title "Update UND-RDR GitHub repo snapshot" \
+              --body "Daily GitHub check refreshed stars, status signals, update report, and a pre-update backup. Review the dataset diff before merging."
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
