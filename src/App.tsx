@@ -766,7 +766,7 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
             title={isLoggedIn ? favoriteLabel : 'Mock login before saving favorites'}
             aria-label={favoriteAriaLabel}
           >
-            {compact ? <StarIcon filled={isFavorite} /> : favoriteLabel}
+            <StarIcon filled={isFavorite} />
           </button>
         </span>
       </div>
@@ -784,10 +784,12 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onSelectRepo, onToggleFavorite
         </div>
       )}
       <div className="card-footer">
-        <strong>{formatNumber(repo.stars)} stars</strong>
-        <span>Updated {formatDate(repo.lastUpdated)}</span>
+        <div className="card-meta">
+          <strong>{formatNumber(repo.stars)} stars</strong>
+          <span>Updated {formatDate(repo.lastUpdated)}</span>
+        </div>
+        <button className="details-button" type="button" onClick={() => onSelectRepo(repo.id)}>Details</button>
       </div>
-      <button className="details-button" type="button" onClick={() => onSelectRepo(repo.id)}>Details</button>
     </article>
   )
 }

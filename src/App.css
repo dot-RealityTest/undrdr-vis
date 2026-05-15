@@ -401,6 +401,14 @@ textarea {
   gap: 12px;
 }
 
+.repo-grid .repo-card {
+  min-height: 266px;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--status-color, var(--blue)) 7%, var(--paper)), var(--paper) 42%),
+    var(--paper);
+}
+
 .repo-card {
   min-width: 0;
   min-height: 304px;
@@ -607,18 +615,26 @@ textarea {
 }
 
 .repo-description {
-  margin: 16px 0 0;
+  margin: 14px 0 0;
   color: #303532;
   font-size: 15px;
-  line-height: 1.52;
+  line-height: 1.46;
   max-width: var(--measure);
+}
+
+.repo-grid .repo-description {
+  display: -webkit-box;
+  min-height: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .repo-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 16px;
+  margin-top: 13px;
 }
 
 .repo-tags span {
@@ -630,22 +646,31 @@ textarea {
   background: #fbfbf8;
 }
 
+.repo-grid .repo-tags span:nth-child(n + 5) {
+  display: none;
+}
+
 .card-footer {
   margin-top: auto;
-  padding-top: 18px;
+  padding-top: 15px;
+}
+
+.card-meta {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
 .card-footer strong { color: var(--ink); }
 
 .details-button {
-  align-self: flex-start;
-  min-height: 34px;
-  margin-top: 14px;
+  flex: 0 0 auto;
+  min-height: 32px;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  padding: 0 12px;
+  padding: 0 11px;
   font-size: 12px;
   font-weight: 850;
 }
@@ -702,12 +727,12 @@ textarea {
 }
 
 .repo-list .card-footer {
-  padding-top: 14px;
+  align-items: end;
+  padding-top: 12px;
 }
 
 .repo-list .details-button {
   min-height: 28px;
-  margin-top: 9px;
   padding: 0 10px;
   font-size: 11px;
 }
