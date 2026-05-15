@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, FormEvent } from 'react'
 import './App.css'
 
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
-type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'about'
+type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'submit' | 'about'
 type SortMode = 'curated' | 'stars' | 'newest' | 'rising' | 'updated' | 'closest'
 
 type Repo = {
@@ -73,6 +73,13 @@ type ReportRepo = {
   status: RepoStatus
 }
 
+type MockSubmission = {
+  repoUrl: string
+  reason: string
+  contact: string
+  submittedAt: string
+}
+
 const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'discover', label: 'Discover' },
   { id: 'new', label: 'New' },
@@ -80,6 +87,7 @@ const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'near', label: 'Near 1K' },
   { id: 'crossed', label: 'Crossed 1K' },
   { id: 'topics', label: 'Topics' },
+  { id: 'submit', label: 'Submit' },
   { id: 'about', label: 'About' },
 ]
 
@@ -105,6 +113,10 @@ function daysSince(value?: string | null) {
 function slugFromUrl(url?: string) {
   const match = url?.match(/github\.com\/([^/]+)\/([^/#?]+)/i)
   return match ? `${match[1]}/${match[2].replace(/\.git$/, '')}` : undefined
+}
+
+function normalizeSlug(value?: string) {
+  return slugFromUrl(value)?.toLowerCase() || ''
 }
 
 function uniq(values: Array<string | null | undefined>) {
@@ -161,6 +173,17 @@ function normalizeRepo(repo: Repo): RepoView {
 function App() {
   const [repos, setRepos] = useState<RepoView[]>([])
   const [report, setReport] = useState<UpdateReport | null>(null)
+  const [submissions, setSubmissions] = useState<MockSubmission[]>(() => {
+    if (typeof window === 'undefined') return []
+    const stored = window.localStorage.getItem('undrdr-mock-submissions')
+    if (!stored) return []
+    try {
+      const parsed = JSON.parse(stored)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  })
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [query, setQuery] = useState('')
   const [language, setLanguage] = useState('all')
@@ -247,6 +270,18 @@ function App() {
   const nearOneK = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Near 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
   const crossed = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Crossed 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
   const trendingTopics = topics.slice(0, 14)
+  const repoIds = useMemo(() => new Set(repos.map((repo) => repo.id)), [repos])
+
+  function handleMockSubmit(submission: MockSubmission) {
+    const next = [submission, ...submissions].slice(0, 20)
+    setSubmissions(next)
+    window.localStorage.setItem('undrdr-mock-submissions', JSON.stringify(next))
+  }
+
+  function clearMockSubmissions() {
+    setSubmissions([])
+    window.localStorage.removeItem('undrdr-mock-submissions')
+  }
 
   return (
     <main className="app-shell">
@@ -320,6 +355,8 @@ function App() {
         </div>
       </section>
 
+      <SubmitRepoSection existingRepoIds={repoIds} submissions={submissions} onClear={clearMockSubmissions} onSubmit={handleMockSubmit} />
+
       <section className="index-section" aria-label="Repository index">
         <div className="index-heading">
           <div>
@@ -392,6 +429,77 @@ function ReportColumn({ title, repos, empty }: { title: string; repos: ReportRep
         </a>
       )) : <span>{empty}</span>}
     </div>
+  )
+}
+
+function SubmitRepoSection({ existingRepoIds, submissions, onClear, onSubmit }: { existingRepoIds: Set<string>; submissions: MockSubmission[]; onClear: () => void; onSubmit: (submission: MockSubmission) => void }) {
+  const [repoUrl, setRepoUrl] = useState('')
+  const [reason, setReason] = useState('')
+  const [contact, setContact] = useState('')
+  const [message, setMessage] = useState('Mock intake only. Nothing is emailed or added to the live dataset yet.')
+  const slug = normalizeSlug(repoUrl)
+  const isDuplicate = Boolean(slug && existingRepoIds.has(slug))
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!slug) {
+      setMessage('Paste a full GitHub repo URL, like https://github.com/owner/repo.')
+      return
+    }
+
+    if (isDuplicate) {
+      setMessage(`${slug} is already in UND-RDR. Duplicate caught before intake.`)
+      return
+    }
+
+    onSubmit({
+      repoUrl: `https://github.com/${slug}`,
+      reason: reason.trim(),
+      contact: contact.trim(),
+      submittedAt: new Date().toISOString(),
+    })
+    setRepoUrl('')
+    setReason('')
+    setContact('')
+    setMessage('Mock submission saved locally for review. The live dataset was not changed.')
+  }
+
+  return (
+    <section className="submit-section" id="submit">
+      <div className="submit-copy">
+        <p>Submit</p>
+        <h2>Know an underrated repo?</h2>
+        <span>For now this is a local mock intake. After undrdr.com and site email are set, this can become a real submission queue.</span>
+      </div>
+      <form className="submit-form" onSubmit={submit}>
+        <label>
+          <span>GitHub repo URL</span>
+          <input value={repoUrl} onChange={(event) => setRepoUrl(event.target.value)} placeholder="https://github.com/owner/repo" />
+        </label>
+        <label>
+          <span>Why should UND-RDR track it?</span>
+          <textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Short reason, topic, or discovery note" rows={4} />
+        </label>
+        <label>
+          <span>Contact optional</span>
+          <input value={contact} onChange={(event) => setContact(event.target.value)} placeholder="email or GitHub handle" />
+        </label>
+        <div className={`submit-note ${isDuplicate ? 'warning' : ''}`}>{message}</div>
+        <button type="submit">Mock submit</button>
+      </form>
+      <div className="submission-preview">
+        <div className="queue-heading">
+          <strong>Mock queue</strong>
+          {submissions.length > 0 && <button type="button" onClick={onClear}>Clear</button>}
+        </div>
+        {submissions.length ? submissions.slice(0, 4).map((item) => (
+          <a key={`${item.repoUrl}-${item.submittedAt}`} href={item.repoUrl} target="_blank" rel="noreferrer">
+            <span>{normalizeSlug(item.repoUrl)}</span>
+            <em>{formatDate(item.submittedAt)}</em>
+          </a>
+        )) : <span>No mock submissions yet.</span>}
+      </div>
+    </section>
   )
 }
 
