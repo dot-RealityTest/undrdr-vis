@@ -14,6 +14,7 @@ dist-ssr
 
 # Generated UND-RDR check snapshots
 data/github-checks/
+data/submission-dry-runs/
 
 # Editor directories and files
 .vscode/*

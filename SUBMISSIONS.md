@@ -22,6 +22,22 @@ Good submissions are underrated, useful, specific, and discoverable. Favor proje
 
 Do not let submissions rewrite the dataset automatically. Accepted repos should go through a separate dataset update, validation, and deploy.
 
+## Add An Accepted Repo
+
+Preview the dataset change first:
+
+```sh
+npm run submissions:add -- --issue 12 --dry-run
+```
+
+Apply the accepted issue:
+
+```sh
+npm run submissions:add -- --issue 12
+```
+
+The script fetches GitHub metadata, refuses dataset duplicates, writes a backup, appends one normalized repo record, runs validation, comments on the issue, and labels it `accepted` plus `added-to-index`.
+
 ## Intake Protection
 
 The live submit endpoint blocks:
@@ -29,4 +45,3 @@ The live submit endpoint blocks:
 - invalid GitHub URLs,
 - repos already in the dataset,
 - repos already waiting in an open `undrdr-submission` issue.
-
