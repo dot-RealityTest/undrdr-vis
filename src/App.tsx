@@ -85,6 +85,34 @@ type MockUser = {
   name: string
 }
 
+type SiteConfig = {
+  siteUrl: string
+  activeHost: string
+  targetDomain: string
+  siteEmail: string
+}
+
+function normalizeSiteUrl(value?: string) {
+  const fallback = 'https://akakika.com/undrdr/'
+  const raw = value?.trim() || fallback
+  return raw.endsWith('/') ? raw : `${raw}/`
+}
+
+function hostFromUrl(value: string) {
+  try {
+    return new URL(value).hostname.replace(/^www\./, '')
+  } catch {
+    return value.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  }
+}
+
+const SITE_CONFIG: SiteConfig = {
+  siteUrl: normalizeSiteUrl(import.meta.env.VITE_SITE_URL),
+  activeHost: hostFromUrl(normalizeSiteUrl(import.meta.env.VITE_SITE_URL)),
+  targetDomain: import.meta.env.VITE_TARGET_DOMAIN || 'undrdr.com',
+  siteEmail: import.meta.env.VITE_SITE_EMAIL || '',
+}
+
 const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'discover', label: 'Discover' },
   { id: 'new', label: 'New' },
@@ -536,7 +564,7 @@ function App() {
         </div>
       </section>
 
-      <SubmitRepoSection existingRepoIds={repoIds} submissions={submissions} onClear={clearMockSubmissions} onSubmit={handleMockSubmit} />
+      <SubmitRepoSection siteConfig={SITE_CONFIG} existingRepoIds={repoIds} submissions={submissions} onClear={clearMockSubmissions} onSubmit={handleMockSubmit} />
 
       <section className="favorites-section" id="favorites" aria-label="Repository watchlist">
         <div className="index-heading">
@@ -582,7 +610,7 @@ function App() {
         />
       )}
 
-      <MethodSection stats={stats} report={report} duplicateCount={duplicates.length} />
+      <MethodSection siteConfig={SITE_CONFIG} stats={stats} report={report} duplicateCount={duplicates.length} />
 
       <section className="about-section" id="about">
         <div>
@@ -600,10 +628,17 @@ function App() {
   )
 }
 
-function MethodSection({ stats, report, duplicateCount }: { stats: { total: number; underOneK: number; rising: number; near: number; crossed: number }; report: UpdateReport | null; duplicateCount: number }) {
+function MethodSection({ siteConfig, stats, report, duplicateCount }: { siteConfig: SiteConfig; stats: { total: number; underOneK: number; rising: number; near: number; crossed: number }; report: UpdateReport | null; duplicateCount: number }) {
   const freshness = report
     ? `Latest local GitHub check: ${formatDate(report.checkedAt)} across ${formatNumber(report.checkedCount)} repos.`
     : 'Daily automation is prepared, but not fully connected yet.'
+  const isTargetDomain = siteConfig.activeHost === siteConfig.targetDomain
+  const submissionDetail = siteConfig.siteEmail
+    ? `The submit form is still a local mock. A real queue can route to ${siteConfig.siteEmail} when intake is connected.`
+    : `The submit form is a local mock until ${siteConfig.targetDomain} and the site email are ready.`
+  const domainDetail = isTargetDomain
+    ? `Metadata is targeting ${siteConfig.siteUrl}. Keep akaKika redirects alive until the move is verified.`
+    : `UND-RDR stays under ${siteConfig.siteUrl} for now. Set VITE_SITE_URL to https://${siteConfig.targetDomain}/ when the domain is connected.`
 
   return (
     <section className="method-section" id="data" aria-label="Data and method">
@@ -618,9 +653,9 @@ function MethodSection({ stats, report, duplicateCount }: { stats: { total: numb
         <Definition title="Signals" detail={`${formatNumber(stats.rising)} heating up, ${formatNumber(stats.near)} almost famous, and ${formatNumber(stats.crossed)} graduated repos are derived from star counts and growth fields.`} />
         <Definition title="Freshness" detail={freshness} />
         <Definition title="Protection" detail={`Validation checks for duplicate IDs and repo loss before changes ship. Current duplicate groups: ${duplicateCount}.`} />
-        <Definition title="Submissions" detail="The submit form is a local mock until undrdr.com and the site email are ready." />
+        <Definition title="Submissions" detail={submissionDetail} />
         <Definition title="Automation" detail="The next backend pass should run a daily GitHub check, update stars, detect 1K crossings, and record growth deltas." />
-        <Definition title="Domain" detail="UND-RDR stays under akaKika for now. The metadata is ready to swap to undrdr.com when the domain is connected." />
+        <Definition title="Domain" detail={domainDetail} />
       </div>
     </section>
   )
@@ -683,13 +718,16 @@ function ReportColumn({ title, repos, empty }: { title: string; repos: ReportRep
   )
 }
 
-function SubmitRepoSection({ existingRepoIds, submissions, onClear, onSubmit }: { existingRepoIds: Set<string>; submissions: MockSubmission[]; onClear: () => void; onSubmit: (submission: MockSubmission) => void }) {
+function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, onSubmit }: { siteConfig: SiteConfig; existingRepoIds: Set<string>; submissions: MockSubmission[]; onClear: () => void; onSubmit: (submission: MockSubmission) => void }) {
   const [repoUrl, setRepoUrl] = useState('')
   const [reason, setReason] = useState('')
   const [contact, setContact] = useState('')
   const [message, setMessage] = useState('Mock intake only. Nothing is emailed or added to the live dataset yet.')
   const slug = normalizeSlug(repoUrl)
   const isDuplicate = Boolean(slug && existingRepoIds.has(slug))
+  const intakeText = siteConfig.siteEmail
+    ? `This is still a local mock intake. When submission storage is connected, public contact can route through ${siteConfig.siteEmail}.`
+    : `For now this is a local mock intake. After ${siteConfig.targetDomain} and site email are set, this can become a real submission queue.`
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -720,7 +758,7 @@ function SubmitRepoSection({ existingRepoIds, submissions, onClear, onSubmit }: 
       <div className="submit-copy">
         <p>Submit</p>
         <h2>Know an underrated repo?</h2>
-        <span>For now this is a local mock intake. After undrdr.com and site email are set, this can become a real submission queue.</span>
+        <span>{intakeText}</span>
       </div>
       <form className="submit-form" onSubmit={submit}>
         <label>
