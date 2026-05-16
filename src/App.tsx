@@ -665,43 +665,78 @@ function App() {
         {searchPanel}
       </section>
 
-      <DiscoveryModes onSelect={applyDiscoveryMode} />
-
-      <section className="metrics" aria-label="Dataset summary">
-        <Metric label="Repos tracked" value={stats.total} />
-        <Metric label="Under 1K" value={stats.underOneK} />
-        <Metric label="Heating up" value={stats.rising} />
-        <Metric label="Almost famous" value={stats.near} />
-        <Metric label="Graduated" value={stats.crossed} />
+      <section className="home-block home-block-site home-block-paths" aria-labelledby="home-paths-title">
+        <HomeBlockHeader
+          kind="Site guide"
+          eyebrow="Start here"
+          title="Choose how you want to discover."
+          detail="These are site controls. They change the path through the index before you open an individual GitHub repository."
+          id="home-paths-title"
+        />
+        <DiscoveryModes onSelect={applyDiscoveryMode} />
       </section>
 
-      <SignalSystem />
+      <section className="home-block home-block-repos" aria-labelledby="home-featured-title">
+        <HomeBlockHeader
+          kind="Repo info"
+          eyebrow="Open these"
+          title="High-signal repository picks."
+          detail="Every card below is a GitHub repository. Hover for a short signal, click to open the repo."
+          id="home-featured-title"
+        />
+        <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
 
-      <StatusBanner loadState={loadState} duplicateCount={duplicates.length} />
-
-      <UpdateReportPanel report={report} />
-
-      <SectionHeader eyebrow="Featured" title="High-Signal Finds" detail="Projects with unusual momentum, strong topics, or graduation signals." />
-      <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
-
-      <section className="community-section" aria-label="Community submitted repositories">
-        <div>
-          <p>Submitted</p>
-          <h2>Community Finds</h2>
-          <span>Repos accepted through the public submission review flow.</span>
-        </div>
-        <div className="community-list">
-          {communityFinds.length
-            ? communityFinds.map((repo) => <MiniRepo key={repo.id} repo={repo} />)
-            : <StateBlock title="No community finds yet" detail="Accepted public submissions will appear here." compact />}
-        </div>
+        <section className="community-section" aria-label="Community submitted repositories">
+          <div>
+            <p>Submitted</p>
+            <h2>Community Finds</h2>
+            <span>Repos accepted through the public submission review flow.</span>
+          </div>
+          <div className="community-list">
+            {communityFinds.length
+              ? communityFinds.map((repo) => <MiniRepo key={repo.id} repo={repo} />)
+              : <StateBlock title="No community finds yet" detail="Accepted public submissions will appear here." compact />}
+          </div>
+        </section>
       </section>
 
-      <section className="split-sections">
-        <RepoRail id="new" title="Fresh Finds" repos={newest} />
-        <RepoRail id="rising" title="Heating Up" repos={rising} />
-        <RepoRail id="near" title="Almost Famous" repos={nearOneK} />
-        <RepoRail id="crossed" title="Graduated" repos={crossed} emptyDetail="No graduated repos are present in this snapshot yet." />
+      <section className="home-block home-block-repos home-block-lanes" aria-labelledby="home-lanes-title">
+        <HomeBlockHeader
+          kind="Repo lanes"
+          eyebrow="Keep browsing"
+          title="Four small lanes through the repo index."
+          detail="These are compact repo queues: new, rising, almost famous, and graduated."
+          id="home-lanes-title"
+        />
+        <section className="split-sections">
+          <RepoRail id="new" title="Fresh Finds" repos={newest} />
+          <RepoRail id="rising" title="Heating Up" repos={rising} />
+          <RepoRail id="near" title="Almost Famous" repos={nearOneK} />
+          <RepoRail id="crossed" title="Graduated" repos={crossed} emptyDetail="No graduated repos are present in this snapshot yet." />
+        </section>
+      </section>
+
+      <section className="home-block home-block-site home-block-pulse" aria-labelledby="home-pulse-title">
+        <HomeBlockHeader
+          kind="Site info"
+          eyebrow="Index pulse"
+          title="What UND-RDR knows right now."
+          detail="Dataset health, status counts, and freshness. This block explains the site, not a single repo."
+          id="home-pulse-title"
+        />
+        <section className="metrics" aria-label="Dataset summary">
+          <Metric label="Repos tracked" value={stats.total} />
+          <Metric label="Under 1K" value={stats.underOneK} />
+          <Metric label="Heating up" value={stats.rising} />
+          <Metric label="Almost famous" value={stats.near} />
+          <Metric label="Graduated" value={stats.crossed} />
+        </section>
+
+        <SignalSystem />
+
+        <StatusBanner loadState={loadState} duplicateCount={duplicates.length} />
+
+        <UpdateReportPanel report={report} />
       </section>
         </>
       )}
@@ -1051,6 +1086,19 @@ function SectionHeader({ eyebrow, title, detail }: { eyebrow: string; title: str
       <div>
         <p>{eyebrow}</p>
         <h2>{title}</h2>
+      </div>
+      <span>{detail}</span>
+    </div>
+  )
+}
+
+function HomeBlockHeader({ kind, eyebrow, title, detail, id }: { kind: string; eyebrow: string; title: string; detail: string; id: string }) {
+  return (
+    <div className="home-block-header">
+      <div>
+        <span className="home-block-kind">{kind}</span>
+        <p>{eyebrow}</p>
+        <h2 id={id}>{title}</h2>
       </div>
       <span>{detail}</span>
     </div>

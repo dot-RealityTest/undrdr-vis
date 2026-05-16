@@ -225,6 +225,7 @@ textarea:focus-visible {
 
 .search-box span,
 .section-header p,
+.home-block-header p,
 .index-heading p,
 .method-intro p,
 .about-section > div > p {
@@ -510,6 +511,106 @@ textarea {
   color: var(--muted);
   font-size: 16px;
   line-height: 1.55;
+}
+
+.home-block {
+  max-width: 1480px;
+  margin: 32px auto 0;
+  padding: 24px clamp(18px, 4vw, 56px);
+  border-top: 1px solid rgba(17, 19, 18, 0.82);
+  border-bottom: 1px solid rgba(17, 19, 18, 0.08);
+}
+
+.home-block-site {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.home-block-repos {
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 14px 44px rgba(17, 19, 18, 0.035);
+}
+
+.home-block-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 460px);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.home-block-kind {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 10px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: #fff;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-block-header h2 {
+  margin: 7px 0 0;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 0.98;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.home-block-header > span {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.home-block .discovery-modes,
+.home-block .metrics,
+.home-block .signal-system,
+.home-block .status-banner,
+.home-block .update-report,
+.home-block .repo-grid,
+.home-block .community-section,
+.home-block .split-sections {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.home-block .discovery-modes,
+.home-block .metrics,
+.home-block .signal-system,
+.home-block .update-report,
+.home-block .repo-grid,
+.home-block .community-section,
+.home-block .split-sections {
+  margin-top: 16px;
+}
+
+.home-block .status-banner {
+  margin-top: 14px;
+}
+
+.home-block .discovery-modes {
+  margin-bottom: 0;
+}
+
+.home-block .repo-grid {
+  margin-top: 20px;
+}
+
+.home-block .community-section {
+  margin-top: 26px;
+}
+
+.home-block .split-sections {
+  margin-top: 18px;
 }
 
 .repo-grid {
@@ -2033,6 +2134,7 @@ textarea {
 @media (max-width: 1120px) {
   .hero,
   .section-header,
+  .home-block-header,
   .discovery-modes,
   .submit-section,
   .method-section,
@@ -2318,16 +2420,17 @@ textarea {
   .favorites-section,
   .method-section,
   .community-section,
+  .home-block,
   .about-section {
     margin-top: 46px;
   }
 
   .signal-system {
-    order: 10;
+    order: initial;
   }
 
   .status-banner {
-    order: 8;
+    order: initial;
   }
 
   .section-header {
@@ -2390,6 +2493,7 @@ textarea {
   .repo-grid,
   .split-sections,
   .community-section,
+  .home-block,
   .repo-list,
   .topic-section,
   .submit-section,
@@ -2402,6 +2506,7 @@ textarea {
   }
 
   .hero,
+  .home-block,
   .discovery-modes,
   .metrics,
   .signal-system,
@@ -2417,6 +2522,39 @@ textarea {
   .method-section,
   .about-section {
     width: 100%;
+  }
+
+  .home-block {
+    padding: 18px;
+  }
+
+  .home-block-paths {
+    order: 2;
+  }
+
+  .home-block-pulse {
+    order: 5;
+  }
+
+  .home-block-repos {
+    order: 3;
+  }
+
+  .home-block-lanes {
+    order: 4;
+  }
+
+  .home-block-header {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .home-block-header h2 {
+    font-size: clamp(28px, 8.8vw, 38px);
+  }
+
+  .home-block-header > span {
+    font-size: 14px;
   }
 
   .index-section .repo-list,
@@ -2674,6 +2812,7 @@ textarea {
 
   .index-section,
   .favorites-section,
+  .home-block,
   .repo-grid,
   .split-sections,
   .community-section,
@@ -2687,6 +2826,7 @@ textarea {
 
   .index-section,
   .favorites-section,
+  .home-block,
   .repo-grid,
   .split-sections,
   .community-section,
@@ -2709,6 +2849,28 @@ textarea {
   }
 
   .favorites-section {
+    order: 4;
+  }
+
+  .home-block {
+    width: 100%;
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+
+  .home-block-paths {
+    order: 2;
+  }
+
+  .home-block-pulse {
+    order: 5;
+  }
+
+  .home-block-repos {
+    order: 3;
+  }
+
+  .home-block-lanes {
     order: 4;
   }
 
