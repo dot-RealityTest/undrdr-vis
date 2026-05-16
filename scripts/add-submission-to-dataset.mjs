@@ -6,6 +6,7 @@ const DEFAULT_DATA_PATH = 'public/data/all_repos.json'
 const DEFAULT_REPO = process.env.SUBMISSIONS_GITHUB_REPO || 'dot-RealityTest/undrdr-vis'
 const DEFAULT_ACCEPTED_LABEL = 'accepted'
 const DEFAULT_ADDED_LABEL = 'added-to-index'
+const REVIEW_LABELS_TO_REMOVE = ['needs-review']
 
 const options = parseArgs(process.argv.slice(2))
 const dataPath = path.resolve(options.data || DEFAULT_DATA_PATH)
@@ -82,6 +83,7 @@ await commentOnIssue(options.repo, options.issue, token, [
 ].join('\n'))
 
 await addLabels(options.repo, options.issue, token, [options.addedLabel, options.acceptedLabel].filter(Boolean))
+await removeLabels(options.repo, options.issue, token, REVIEW_LABELS_TO_REMOVE)
 
 console.log(`- dataset updated: ${dataPath}`)
 console.log(`- backup: ${backupPath}`)
@@ -342,4 +344,15 @@ async function addLabels(targetRepo, issueNumber, authToken, labels) {
   })
 
   if (!response.ok) throw new Error(`github-label-${response.status}`)
+}
+
+async function removeLabels(targetRepo, issueNumber, authToken, labels) {
+  for (const label of labels) {
+    const response = await fetch(`https://api.github.com/repos/${repoPath(targetRepo)}/issues/${issueNumber}/labels/${encodeURIComponent(label)}`, {
+      method: 'DELETE',
+      headers: githubHeaders(authToken),
+    })
+
+    if (!response.ok && response.status !== 404) throw new Error(`github-unlabel-${label}-${response.status}`)
+  }
 }

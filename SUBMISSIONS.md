@@ -10,11 +10,14 @@ UND-RDR submissions arrive as GitHub issues labeled `undrdr-submission` and `nee
 4. Check the current star count.
 5. Prefer repos under 1,000 stars unless it is a useful graduated example.
 6. Note the primary language, description, and useful topics.
-7. Decide one outcome:
+7. Run the dry-run command before making any dataset change.
+8. Decide one outcome:
    - `accepted`: good fit for UND-RDR.
    - `needs-data`: promising, but missing signal or metadata.
    - `rejected`: duplicate, unavailable, spam, or not a fit.
    - `added-to-index`: already added to the dataset.
+
+Do not use labels alone to accept a repo. Labels are review state. The dataset only changes through the acceptance command below.
 
 ## Acceptance Notes
 

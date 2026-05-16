@@ -169,6 +169,7 @@ async function forwardToGitHubIssue(submission: IntakeSubmission) {
   const config = getGitHubIssueConfig()
   if (!config) return null
 
+  const issueNumberPlaceholder = '<issue-number>'
   const body = [
     'New UND-RDR repository submission.',
     '',
@@ -179,6 +180,20 @@ async function forwardToGitHubIssue(submission: IntakeSubmission) {
     `- Intake ID: ${submission.id}`,
     '',
     'The live dataset was not changed by this submission.',
+    '',
+    '## Reviewer checklist',
+    '',
+    '- [ ] Open the submitted repository and confirm it is public and reachable.',
+    '- [ ] Confirm it is not already in `public/data/all_repos.json`.',
+    '- [ ] Decide whether it fits UND-RDR.',
+    '- [ ] Run the dry-run command before changing data.',
+    '',
+    '```sh',
+    `npm run submissions:add -- --issue ${issueNumberPlaceholder} --dry-run`,
+    `npm run submissions:add -- --issue ${issueNumberPlaceholder}`,
+    '```',
+    '',
+    '**Important:** do not mark this accepted by changing labels manually. The apply command updates the dataset, validates it, comments on this issue, and adds the accepted labels.',
   ].join('\n')
 
   const response = await fetch(`https://api.github.com/repos/${gitHubRepoPath(config.targetRepo)}/issues`, {
