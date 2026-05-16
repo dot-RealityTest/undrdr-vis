@@ -69,6 +69,12 @@ The endpoint:
 - creates a GitHub issue labeled `undrdr-submission` and `needs-review`,
 - never changes the live dataset directly.
 
+Public contact is `submit@undrdr.com`. DNS and mailbox readiness are tracked in:
+
+```text
+docs/email-intake.md
+```
+
 Reviewer guide:
 
 ```text

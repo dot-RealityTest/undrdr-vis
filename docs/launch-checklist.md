@@ -141,7 +141,7 @@ After launch:
 
 ## Post-Launch
 
-- Create the real site email or alias.
+- Create the real site email or alias. Track setup in `docs/email-intake.md`.
 - Decide whether `akakika.com/undrdr/` should redirect to `undrdr.com` or remain as a historical entry point.
 - Watch the daily GitHub refresh PRs and merge only after validation stays clean.
 - Review real submission issues before accepting them into `public/data/all_repos.json`.

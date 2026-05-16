@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "verify:domain": "node scripts/verify-domain-build.mjs",
+    "verify:email": "node scripts/check-email-dns.mjs",
     "check:github": "node scripts/check-github-repos.mjs",
     "check:github:apply": "node scripts/check-github-repos.mjs --apply",
     "check:github:sample": "node scripts/check-github-repos.mjs --limit 10",

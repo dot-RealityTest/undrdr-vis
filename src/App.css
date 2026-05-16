@@ -1844,6 +1844,19 @@ textarea {
   line-height: 1.55;
 }
 
+.inline-link {
+  color: var(--ink);
+  font-weight: 820;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.inline-link:hover,
+.inline-link:focus-visible {
+  color: var(--green);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

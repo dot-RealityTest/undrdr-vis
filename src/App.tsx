@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { CSSProperties, FormEvent } from 'react'
+import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import './App.css'
 
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
@@ -128,7 +128,19 @@ const SITE_CONFIG: SiteConfig = {
   siteUrl: normalizeSiteUrl(import.meta.env.VITE_SITE_URL),
   activeHost: hostFromUrl(normalizeSiteUrl(import.meta.env.VITE_SITE_URL)),
   targetDomain: import.meta.env.VITE_TARGET_DOMAIN || 'undrdr.com',
-  siteEmail: import.meta.env.VITE_SITE_EMAIL || '',
+  siteEmail: import.meta.env.VITE_SITE_EMAIL || 'submit@undrdr.com',
+}
+
+function submissionMailto(siteEmail: string) {
+  const subject = encodeURIComponent('UND-RDR repo submission')
+  const body = encodeURIComponent([
+    'GitHub repo URL:',
+    '',
+    'Why should UND-RDR track it?',
+    '',
+    'Your contact:',
+  ].join('\n'))
+  return `mailto:${siteEmail}?subject=${subject}&body=${body}`
 }
 
 const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
@@ -672,6 +684,7 @@ function App() {
           <Definition title="Heating up" detail="A project with star growth or curated momentum signals." />
           <Definition title="Almost famous" detail="A project close to crossing the 1,000-star threshold." />
           <Definition title="Graduated" detail="A project that crossed 1,000 stars and left the underrated zone." />
+          <Definition title="Submit a repo" detail={<><a className="inline-link" href={submissionMailto(SITE_CONFIG.siteEmail)}>{SITE_CONFIG.siteEmail}</a> or use the protected Submit form.</>} />
         </div>
       </section>
     </main>
@@ -779,7 +792,7 @@ function SubmitRepoSection({ siteConfig, existingRepoIds, submissions, onClear, 
   const slug = normalizeSlug(repoUrl)
   const isDuplicate = Boolean(slug && existingRepoIds.has(slug))
   const intakeText = siteConfig.siteEmail
-    ? `Submissions are received for review. Public contact can route through ${siteConfig.siteEmail} when mail forwarding is enabled.`
+    ? <>Use the form for protected review, or email <a className="inline-link" href={submissionMailto(siteConfig.siteEmail)}>{siteConfig.siteEmail}</a>.</>
     : `Submissions are received through a protected intake endpoint. Add a review email or webhook later to forward them outside ${siteConfig.targetDomain}.`
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -1251,7 +1264,7 @@ function MiniRepo({ repo }: { repo: RepoView }) {
   )
 }
 
-function Definition({ title, detail }: { title: string; detail: string }) {
+function Definition({ title, detail }: { title: string; detail: ReactNode }) {
   return <div className="definition"><strong>{title}</strong><span>{detail}</span></div>
 }
 
