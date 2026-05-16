@@ -83,8 +83,17 @@ type SubmitResponse = {
   }
 }
 
+type UserCollection = {
+  id: string
+  name: string
+  repoIds: string[]
+  createdAt: string
+}
+
 const SITE_EMAIL = import.meta.env.VITE_SITE_EMAIL || 'submit@undrdr.com'
 const readmeCache = new Map<string, string>()
+const COLLECTIONS_KEY = 'undrdr-mock-collections'
+const DEFAULT_COLLECTION_ID = 'watchlist'
 
 function formatNumber(value = 0) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
@@ -130,6 +139,11 @@ function readStoredArray<T>(key: string) {
   } catch {
     return []
   }
+}
+
+function collectionIdFromName(name: string) {
+  const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return `${slug || 'collection'}-${Date.now().toString(36)}`
 }
 
 function routeFromHash(): Route {
@@ -231,6 +245,8 @@ function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(() => window.localStorage.getItem('undrdr-mock-user') === 'true')
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => readStoredArray<string>('undrdr-mock-favorites'))
+  const [collections, setCollections] = useState<UserCollection[]>(() => readStoredArray<UserCollection>(COLLECTIONS_KEY))
+  const [activeCollectionId, setActiveCollectionId] = useState(DEFAULT_COLLECTION_ID)
   const [submissions, setSubmissions] = useState<SubmissionReceipt[]>(() => readStoredArray<SubmissionReceipt>('undrdr-submission-receipts'))
   const [toast, setToast] = useState<string | null>(null)
 
@@ -336,9 +352,16 @@ function App() {
     window.localStorage.setItem('undrdr-mock-user', String(next))
     if (!next) {
       setFavoriteIds([])
+      setCollections([])
       window.localStorage.removeItem('undrdr-mock-favorites')
+      window.localStorage.removeItem(COLLECTIONS_KEY)
     }
     setToast(next ? 'Signed in locally. Saving is enabled.' : 'Signed out.')
+  }
+
+  function saveCollections(next: UserCollection[]) {
+    setCollections(next)
+    window.localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(next))
   }
 
   function toggleFavorite(repoId: string) {
@@ -346,9 +369,69 @@ function App() {
       setToast('Sign in to save repos.')
       return
     }
-    const next = favoriteSet.has(repoId) ? favoriteIds.filter((id) => id !== repoId) : [repoId, ...favoriteIds]
+    const removing = favoriteSet.has(repoId)
+    const next = removing ? favoriteIds.filter((id) => id !== repoId) : [repoId, ...favoriteIds]
     setFavoriteIds(next)
     window.localStorage.setItem('undrdr-mock-favorites', JSON.stringify(next))
+    if (removing) {
+      saveCollections(collections.map((collection) => ({ ...collection, repoIds: collection.repoIds.filter((id) => id !== repoId) })))
+    }
+  }
+
+  function createCollection(name: string) {
+    if (!isLoggedIn) {
+      setToast('Sign in to create collections.')
+      return
+    }
+    const cleanName = name.trim()
+    if (!cleanName) {
+      setToast('Name the collection first.')
+      return
+    }
+    const existing = collections.find((collection) => collection.name.toLowerCase() === cleanName.toLowerCase())
+    if (existing) {
+      setActiveCollectionId(existing.id)
+      setToast(`${existing.name} already exists.`)
+      return
+    }
+    const collection: UserCollection = { id: collectionIdFromName(cleanName), name: cleanName, repoIds: [], createdAt: new Date().toISOString() }
+    saveCollections([collection, ...collections])
+    setActiveCollectionId(collection.id)
+    setToast(`${collection.name} collection created.`)
+  }
+
+  function addToCollection(repoId: string, collectionId: string) {
+    if (!isLoggedIn) {
+      setToast('Sign in to collect repos.')
+      return
+    }
+    if (!favoriteSet.has(repoId)) {
+      const nextFavorites = [repoId, ...favoriteIds]
+      setFavoriteIds(nextFavorites)
+      window.localStorage.setItem('undrdr-mock-favorites', JSON.stringify(nextFavorites))
+    }
+    if (collectionId === DEFAULT_COLLECTION_ID) {
+      setToast('Saved to Watchlist.')
+      return
+    }
+    const target = collections.find((collection) => collection.id === collectionId)
+    if (!target) return
+    if (target.repoIds.includes(repoId)) {
+      setToast(`Already in ${target.name}.`)
+      return
+    }
+    saveCollections(collections.map((collection) => collection.id === collectionId ? { ...collection, repoIds: [repoId, ...collection.repoIds] } : collection))
+    setToast(`Added to ${target.name}.`)
+  }
+
+  function removeFromCollection(repoId: string, collectionId: string) {
+    if (collectionId === DEFAULT_COLLECTION_ID) {
+      toggleFavorite(repoId)
+      return
+    }
+    const target = collections.find((collection) => collection.id === collectionId)
+    saveCollections(collections.map((collection) => collection.id === collectionId ? { ...collection, repoIds: collection.repoIds.filter((id) => id !== repoId) } : collection))
+    setToast(target ? `Removed from ${target.name}.` : 'Removed from collection.')
   }
 
   function addSubmission(submission: SubmissionReceipt) {
@@ -372,11 +455,11 @@ function App() {
           <RepoGrid repos={visibleRepos} report={report} loadState={loadState} favoriteSet={favoriteSet} isLoggedIn={isLoggedIn} onOpen={setSelectedId} onFavorite={toggleFavorite} />
         </>
       )}
-      {route === 'collections' && <CollectionsPage repos={repos} onPick={(term) => { setQuery(term); setActiveTier('all'); go('discover') }} />}
+      {route === 'collections' && <CollectionsPage repos={repos} favoriteIds={favoriteIds} favoriteSet={favoriteSet} collections={collections} activeCollectionId={activeCollectionId} isLoggedIn={isLoggedIn} onLogin={toggleLogin} onCreateCollection={createCollection} onSelectCollection={setActiveCollectionId} onOpen={setSelectedId} onFavorite={toggleFavorite} onRemoveFromCollection={removeFromCollection} />}
       {route === 'submit' && <SubmitPage repoIds={repoIds} submissions={submissions} onSubmit={addSubmission} onClear={clearSubmissions} />}
       {route === 'about' && <AboutPage stats={stats} />}
       {route === 'watchlist' && <WatchlistPage repos={repos.filter((repo) => favoriteSet.has(repo.id))} favoriteSet={favoriteSet} isLoggedIn={isLoggedIn} onLogin={toggleLogin} onOpen={setSelectedId} onFavorite={toggleFavorite} />}
-      <DetailOverlay repo={selectedRepo} previousRepo={previousRepo} nextRepo={nextRepo} relatedRepos={relatedRepos} isOpen={Boolean(selectedRepo)} isLoggedIn={isLoggedIn} isFavorite={selectedRepo ? favoriteSet.has(selectedRepo.id) : false} onClose={() => setSelectedId(null)} onSelect={setSelectedId} onFavorite={toggleFavorite} />
+      <DetailOverlay repo={selectedRepo} previousRepo={previousRepo} nextRepo={nextRepo} relatedRepos={relatedRepos} collections={collections} isOpen={Boolean(selectedRepo)} isLoggedIn={isLoggedIn} isFavorite={selectedRepo ? favoriteSet.has(selectedRepo.id) : false} onClose={() => setSelectedId(null)} onSelect={setSelectedId} onFavorite={toggleFavorite} onAddToCollection={addToCollection} />
       <SiteFooter onRoute={go} onTier={(tier) => { setActiveTier(tier); go('discover') }} />
       {toast && <div className="toast" role="status">{toast}</div>}
     </>
@@ -509,7 +592,7 @@ function RepoCard({ repo, starred, isLoggedIn, onOpen, onFavorite }: { repo: Rep
   )
 }
 
-function DetailOverlay({ repo, previousRepo, nextRepo, relatedRepos, isOpen, isLoggedIn, isFavorite, onClose, onSelect, onFavorite }: { repo: RepoView | null; previousRepo: RepoView | null; nextRepo: RepoView | null; relatedRepos: RepoView[]; isOpen: boolean; isLoggedIn: boolean; isFavorite: boolean; onClose: () => void; onSelect: (id: string) => void; onFavorite: (id: string) => void }) {
+function DetailOverlay({ repo, previousRepo, nextRepo, relatedRepos, collections, isOpen, isLoggedIn, isFavorite, onClose, onSelect, onFavorite, onAddToCollection }: { repo: RepoView | null; previousRepo: RepoView | null; nextRepo: RepoView | null; relatedRepos: RepoView[]; collections: UserCollection[]; isOpen: boolean; isLoggedIn: boolean; isFavorite: boolean; onClose: () => void; onSelect: (id: string) => void; onFavorite: (id: string) => void; onAddToCollection: (repoId: string, collectionId: string) => void }) {
   if (!repo) {
     return <div className="overlay" id="overlay" />
   }
@@ -568,6 +651,7 @@ function DetailOverlay({ repo, previousRepo, nextRepo, relatedRepos, isOpen, isL
               <StarIcon filled={isFavorite} /> {isLoggedIn ? (isFavorite ? 'Saved' : 'Save') : 'Sign in to save'}
             </button>
           </div>
+          {isLoggedIn && <CollectionPicker repoId={repo.id} collections={collections} onAdd={onAddToCollection} />}
         </div>
 
         <div className="next-strip" id="nextStrip">
@@ -598,6 +682,31 @@ function NextCard({ repo, onSelect }: { repo: RepoView; onSelect: (id: string) =
         <span className="next-card-stars"><StarOutline />{formatNumber(repo.stars)}</span>
         <span className="next-card-arrow"><ChevronRight /></span>
       </div>
+    </div>
+  )
+}
+
+function CollectionPicker({ repoId, collections, onAdd }: { repoId: string; collections: UserCollection[]; onAdd: (repoId: string, collectionId: string) => void }) {
+  const [selectedCollection, setSelectedCollection] = useState(() => collections[0]?.id || DEFAULT_COLLECTION_ID)
+  const hasCustomCollections = collections.length > 0
+  const activeCollection = collections.some((collection) => collection.id === selectedCollection) ? selectedCollection : collections[0]?.id || DEFAULT_COLLECTION_ID
+
+  return (
+    <div className="collection-picker">
+      <div>
+        <strong>Add to collection</strong>
+        <span>{hasCustomCollections ? 'Keep this find in a personal set.' : 'Create named sets from Collections.'}</span>
+      </div>
+      {hasCustomCollections ? (
+        <>
+          <select value={activeCollection} onChange={(event) => setSelectedCollection(event.target.value)}>
+            {collections.map((collection) => <option key={collection.id} value={collection.id}>{collection.name}</option>)}
+          </select>
+          <button type="button" onClick={() => onAdd(repoId, activeCollection)}>Add</button>
+        </>
+      ) : (
+        <button type="button" onClick={() => onAdd(repoId, DEFAULT_COLLECTION_ID)}>Save to Watchlist</button>
+      )}
     </div>
   )
 }
@@ -792,28 +901,78 @@ function renderInlineMarkdown(text: string) {
   return nodes
 }
 
-function CollectionsPage({ repos, onPick }: { repos: RepoView[]; onPick: (term: string) => void }) {
-  const collections = [
-    ['Rust Ecosystem', 'rust'],
-    ['TypeScript Tools', 'typescript'],
-    ['AI / ML', 'ai'],
-    ['CLI & Terminal', 'cli'],
-    ['Developer Experience', 'developer-tools'],
-    ['Local AI', 'local'],
+function CollectionsPage({ repos, favoriteIds, favoriteSet, collections, activeCollectionId, isLoggedIn, onLogin, onCreateCollection, onSelectCollection, onOpen, onFavorite, onRemoveFromCollection }: { repos: RepoView[]; favoriteIds: string[]; favoriteSet: Set<string>; collections: UserCollection[]; activeCollectionId: string; isLoggedIn: boolean; onLogin: () => void; onCreateCollection: (name: string) => void; onSelectCollection: (id: string) => void; onOpen: (id: string) => void; onFavorite: (id: string) => void; onRemoveFromCollection: (repoId: string, collectionId: string) => void }) {
+  const [collectionName, setCollectionName] = useState('')
+  const repoMap = useMemo(() => new Map(repos.map((repo) => [repo.id, repo])), [repos])
+  const collectionRows = [
+    { id: DEFAULT_COLLECTION_ID, name: 'Watchlist', repoIds: favoriteIds, detail: 'Everything you starred while browsing.' },
+    ...collections.map((collection) => ({ id: collection.id, name: collection.name, repoIds: collection.repoIds, detail: `Created ${formatDate(collection.createdAt)}` })),
   ]
+  const activeCollection = collectionRows.find((collection) => collection.id === activeCollectionId) || collectionRows[0]
+  const activeRepos = activeCollection.repoIds.map((id) => repoMap.get(id)).filter(Boolean) as RepoView[]
+
+  function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    onCreateCollection(collectionName)
+    setCollectionName('')
+  }
+
   return (
-    <main className="page-panel">
+    <main className="repos page-panel">
       <div className="container">
         <div className="section-head">
           <h2>Collections</h2>
-          <span className="meta">curated paths through {formatNumber(repos.length)} repos</span>
+          <span className="meta">{isLoggedIn ? `${formatNumber(favoriteIds.length)} saved · ${formatNumber(collections.length)} sets` : 'personal saved repo sets'}</span>
         </div>
-        <div className="collection-grid">
-          {collections.map(([label, term]) => {
-            const count = repos.filter((repo) => [repo.ownerName, repo.repoName, repo.description, repo.language, ...repo.topicsAll].join(' ').toLowerCase().includes(term)).length
-            return <button className="collection-card" key={term} onClick={() => onPick(term)}><strong>{label}</strong><span>Open this discovery path.</span><em>{formatNumber(count)} repos</em></button>
-          })}
-        </div>
+        {!isLoggedIn && (
+          <div className="collection-login">
+            <strong>Collections are personal.</strong>
+            <span>Sign in with the local mock account to save repos into a Watchlist and build named sets.</span>
+            <button className="btn-primary" onClick={onLogin}>Sign in</button>
+          </div>
+        )}
+        {isLoggedIn && (
+          <>
+            <div className="collections-layout">
+              <aside className="collections-sidebar">
+                <form className="collection-create" onSubmit={create}>
+                  <label htmlFor="collection-name">New collection</label>
+                  <div>
+                    <input id="collection-name" value={collectionName} onChange={(event) => setCollectionName(event.target.value)} placeholder="AI agents, Try later..." />
+                    <button type="submit">Create</button>
+                  </div>
+                </form>
+                <div className="collection-list">
+                  {collectionRows.map((collection) => (
+                    <button key={collection.id} className={collection.id === activeCollection.id ? 'active' : ''} onClick={() => onSelectCollection(collection.id)}>
+                      <strong>{collection.name}</strong>
+                      <span>{collection.detail}</span>
+                      <em>{formatNumber(collection.repoIds.length)} repos</em>
+                    </button>
+                  ))}
+                </div>
+              </aside>
+              <section className="collection-detail">
+                <div className="collection-detail-head">
+                  <div>
+                    <span className="eyebrow">Collected repos</span>
+                    <h3>{activeCollection.name}</h3>
+                  </div>
+                  <span>{formatNumber(activeRepos.length)} repos</span>
+                </div>
+                {activeRepos.length === 0 ? (
+                  <EmptyState title="Nothing here yet" detail={activeCollection.id === DEFAULT_COLLECTION_ID ? 'Use the star on any repo to save it to your Watchlist.' : 'Open a repo and add it to this collection from the drawer.'} />
+                ) : (
+                  <div className="repo-grid collection-repos">
+                    {activeRepos.map((repo) => (
+                      <RepoCard key={repo.id} repo={repo} starred={favoriteSet.has(repo.id)} isLoggedIn onOpen={onOpen} onFavorite={activeCollection.id === DEFAULT_COLLECTION_ID ? onFavorite : () => onRemoveFromCollection(repo.id, activeCollection.id)} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          </>
+        )}
       </div>
     </main>
   )
@@ -954,7 +1113,7 @@ function SiteFooter({ onRoute, onTier }: { onRoute: (route: Route) => void; onTi
             </div>
           </div>
           <FooterColumn title="Discover" links={[['All Repos', () => onTier('all')], ['Fresh Finds', () => onTier('fresh')], ['Rising', () => onTier('rising')], ['Hidden Gems', () => onTier('hidden')], ['Graduated', () => onTier('graduated')]]} />
-          <FooterColumn title="Collections" links={[['Rust Ecosystem', () => onRoute('collections')], ['TypeScript Tools', () => onRoute('collections')], ['AI / ML', () => onRoute('collections')], ['CLI & Terminal', () => onRoute('collections')], ['Developer Experience', () => onRoute('collections')]]} />
+          <FooterColumn title="Collections" links={[['Watchlist', () => onRoute('collections')], ['Saved Sets', () => onRoute('collections')], ['Create Collection', () => onRoute('collections')], ['Personal Library', () => onRoute('collections')]]} />
           <FooterColumn title="Kika's Universe" links={[['akakika.com', () => window.open('https://akakika.com', '_blank')], ['GitHub', () => window.open('https://github.com/dot-RealityTest/undrdr-vis', '_blank')], ['Submit a repo', () => onRoute('submit')]]} />
         </div>
         <hr className="footer-divider" />
