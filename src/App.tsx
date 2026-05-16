@@ -35,6 +35,8 @@ type Repo = {
   is_gem?: boolean
   archived?: boolean
   disabled?: boolean
+  submittedFromIssue?: string
+  submittedReason?: string
 }
 
 type RepoView = Repo & {
@@ -425,6 +427,10 @@ function App() {
 
   const featured = useMemo(() => repos.filter((repo) => repo.is_gem || repo.growthScore > 35).sort((a, b) => b.growthScore - a.growthScore).slice(0, 6), [repos])
   const newest = useMemo(() => [...repos].sort((a, b) => daysSince(a.firstSeen) - daysSince(b.firstSeen)).slice(0, 8), [repos])
+  const communityFinds = useMemo(() => repos
+    .filter((repo) => repo.wave === 'submitted' || Boolean(repo.submittedFromIssue))
+    .sort((a, b) => daysSince(a.firstSeen) - daysSince(b.firstSeen))
+    .slice(0, 6), [repos])
   const rising = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Rising').sort((a, b) => b.growthScore - a.growthScore).slice(0, 8), [repos])
   const nearOneK = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Near 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
   const crossed = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Crossed 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
@@ -598,6 +604,19 @@ function App() {
 
       <SectionHeader eyebrow="Featured" title="High-Signal Finds" detail="Projects with unusual momentum, strong topics, or graduation signals." />
       <RepoGrid repos={featured} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} emptyTitle="No featured repos yet" emptyDetail="Marked gems and strong momentum signals will appear here." />
+
+      <section className="community-section" aria-label="Community submitted repositories">
+        <div>
+          <p>Submitted</p>
+          <h2>Community Finds</h2>
+          <span>Repos accepted through the public submission review flow.</span>
+        </div>
+        <div className="community-list">
+          {communityFinds.length
+            ? communityFinds.map((repo) => <MiniRepo key={repo.id} repo={repo} />)
+            : <StateBlock title="No community finds yet" detail="Accepted public submissions will appear here." compact />}
+        </div>
+      </section>
 
       <section className="split-sections">
         <RepoRail id="new" title="Fresh Finds" repos={newest} />

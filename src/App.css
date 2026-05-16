@@ -1448,6 +1448,50 @@ textarea {
   gap: 14px;
 }
 
+.community-section {
+  max-width: 1480px;
+  margin: 24px auto 0;
+  padding: 0 clamp(18px, 4vw, 56px);
+  display: grid;
+  grid-template-columns: minmax(240px, 0.34fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.community-section > div:first-child {
+  border-top: 1px solid var(--ink);
+  padding-top: 14px;
+}
+
+.community-section p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.community-section h2 {
+  margin: 7px 0 8px;
+  font-size: clamp(28px, 3.6vw, 48px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.community-section span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.community-list {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 18px;
+  border-top: 1px solid var(--line);
+}
+
 .repo-rail {
   border-top: 1px solid var(--ink);
   padding-top: 14px;
@@ -1874,6 +1918,7 @@ textarea {
   .discovery-modes,
   .submit-section,
   .method-section,
+  .community-section,
   .about-section {
     grid-template-columns: 1fr;
   }
@@ -1886,6 +1931,7 @@ textarea {
   .update-report,
   .repo-grid,
   .split-sections,
+  .community-list,
   .method-grid,
   .topic-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2153,6 +2199,7 @@ textarea {
   .index-section,
   .favorites-section,
   .method-section,
+  .community-section,
   .about-section {
     margin-top: 46px;
   }
@@ -2174,15 +2221,19 @@ textarea {
   }
 
   .split-sections {
+    order: 14;
+  }
+
+  .community-section {
     order: 13;
   }
 
   .topics-section {
-    order: 14;
+    order: 15;
   }
 
   .submit-section {
-    order: 15;
+    order: 16;
   }
 
   .favorites-section {
@@ -2195,11 +2246,11 @@ textarea {
   }
 
   .method-section {
-    order: 16;
+    order: 17;
   }
 
   .about-section {
-    order: 17;
+    order: 18;
   }
 
   .section-header {
@@ -2220,6 +2271,7 @@ textarea {
 
   .repo-grid,
   .split-sections,
+  .community-section,
   .repo-list,
   .topic-section,
   .submit-section,
@@ -2239,6 +2291,7 @@ textarea {
   .section-header,
   .repo-grid,
   .split-sections,
+  .community-section,
   .topics-section,
   .submit-section,
   .favorites-section,
@@ -2481,6 +2534,7 @@ textarea {
   .favorites-section,
   .repo-grid,
   .split-sections,
+  .community-section,
   .topic-section,
   .submit-section,
   .method-section,
@@ -2493,6 +2547,7 @@ textarea {
   .favorites-section,
   .repo-grid,
   .split-sections,
+  .community-section,
   .topic-section,
   .submit-section,
   .method-section,
@@ -2540,23 +2595,27 @@ textarea {
   }
 
   .split-sections {
+    order: 14;
+  }
+
+  .community-section {
     order: 13;
   }
 
   .topics-section {
-    order: 14;
-  }
-
-  .submit-section {
     order: 15;
   }
 
-  .method-section {
+  .submit-section {
     order: 16;
   }
 
-  .about-section {
+  .method-section {
     order: 17;
+  }
+
+  .about-section {
+    order: 18;
   }
 
   .index-heading {
