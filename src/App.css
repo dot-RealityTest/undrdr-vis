@@ -542,22 +542,38 @@
     background: linear-gradient(transparent, var(--surface));
     pointer-events: none;
   }
-  .detail-readme-body h3 {
+  .readme-rendered h3 {
     font-size: 15px;
     font-weight: 700;
     color: var(--ink);
     margin-bottom: 8px;
     letter-spacing: 0;
   }
-  .detail-readme-body p { margin-bottom: 12px; }
-  .readme-original {
+  .readme-rendered p {
     margin: 0;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    font-family: var(--sans);
-    font-size: 13px;
-    line-height: 1.65;
-    color: var(--ink-2);
+    margin-bottom: 12px;
+  }
+  .readme-rendered p:last-child,
+  .readme-rendered ul:last-child {
+    margin-bottom: 0;
+  }
+  .readme-rendered ul {
+    margin: 0 0 12px 18px;
+    padding: 0;
+  }
+  .readme-rendered li {
+    margin-bottom: 6px;
+    padding-left: 2px;
+  }
+  .readme-rendered strong {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .readme-rendered a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
   }
   .readme-status {
     color: var(--muted);

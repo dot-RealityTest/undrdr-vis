@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
+import type { FormEvent, ReactNode } from 'react'
 import './App.css'
 
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
@@ -651,8 +651,8 @@ function ReadmePreview({ repo }: { repo: RepoView }) {
   }
 
   return (
-    <div className="detail-readme-body">
-      <pre className="readme-original">{readmePreview(readme, repo.repoName)}</pre>
+    <div className="detail-readme-body readme-rendered">
+      {renderReadmePreview(readmePreview(readme, repo.repoName))}
     </div>
   )
 }
@@ -690,6 +690,106 @@ function readmePreview(readme: string, repoName: string) {
 
   if (cleaned.length <= 2200) return cleaned
   return `${cleaned.slice(0, 2200).trimEnd()}\n\n...`
+}
+
+function renderReadmePreview(markdown: string) {
+  const lines = markdown
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line) => !/^\s*!\[[^\]]*]\([^)]+\)\s*$/.test(line))
+
+  const nodes: ReactNode[] = []
+  let paragraph: string[] = []
+  let bullets: string[] = []
+
+  function flushParagraph() {
+    if (!paragraph.length) return
+    const text = paragraph.join(' ').replace(/\s+/g, ' ').trim()
+    if (text) {
+      nodes.push(<p key={`p-${nodes.length}`}>{renderInlineMarkdown(text)}</p>)
+    }
+    paragraph = []
+  }
+
+  function flushBullets() {
+    if (!bullets.length) return
+    nodes.push(
+      <ul key={`ul-${nodes.length}`}>
+        {bullets.map((item, index) => <li key={`${item}-${index}`}>{renderInlineMarkdown(item)}</li>)}
+      </ul>,
+    )
+    bullets = []
+  }
+
+  lines.forEach((line) => {
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      flushParagraph()
+      flushBullets()
+      return
+    }
+
+    const heading = trimmed.match(/^#{1,6}\s+(.+)$/)
+    if (heading) {
+      flushParagraph()
+      flushBullets()
+      nodes.push(<h3 key={`h-${nodes.length}`}>{renderInlineMarkdown(heading[1])}</h3>)
+      return
+    }
+
+    const bullet = trimmed.match(/^[-*]\s+(.+)$/)
+    if (bullet) {
+      flushParagraph()
+      bullets.push(bullet[1])
+      return
+    }
+
+    flushBullets()
+    paragraph.push(trimmed)
+  })
+
+  flushParagraph()
+  flushBullets()
+
+  return nodes.length ? nodes : [<p key="empty">README preview is empty.</p>]
+}
+
+function renderInlineMarkdown(text: string) {
+  const nodes: ReactNode[] = []
+  const pattern = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\[[^\]]+]\([^)]+\))/g
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = pattern.exec(text))) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index))
+    }
+
+    const raw = match[0]
+    if (raw.startsWith('`')) {
+      nodes.push(<code key={`code-${match.index}`}>{raw.slice(1, -1)}</code>)
+    } else if (raw.startsWith('**')) {
+      nodes.push(<strong key={`strong-${match.index}`}>{raw.slice(2, -2)}</strong>)
+    } else {
+      const link = raw.match(/^\[([^\]]+)]\(([^)]+)\)$/)
+      const label = link?.[1] || raw
+      const href = link?.[2] || ''
+      if (/^https?:\/\//i.test(href)) {
+        nodes.push(<a key={`link-${match.index}`} href={href} target="_blank" rel="noreferrer">{label}</a>)
+      } else {
+        nodes.push(label)
+      }
+    }
+
+    lastIndex = pattern.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex))
+  }
+
+  return nodes
 }
 
 function CollectionsPage({ repos, onPick }: { repos: RepoView[]; onPick: (term: string) => void }) {
