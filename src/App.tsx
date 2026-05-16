@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import './App.css'
 
 type RepoStatus = 'Underrated' | 'Rising' | 'Near 1K' | 'Crossed 1K' | 'Archived/Inactive'
-type SectionId = 'discover' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'favorites' | 'submit' | 'data' | 'about'
+type SectionId = 'discover' | 'browse' | 'new' | 'rising' | 'near' | 'crossed' | 'topics' | 'favorites' | 'submit' | 'data' | 'about'
 type SortMode = 'curated' | 'stars' | 'newest' | 'rising' | 'updated' | 'closest'
 type DiscoveryModeId = 'surprise' | 'rising' | 'fresh' | 'almost' | 'local' | 'agents' | 'apple'
 
@@ -147,6 +147,7 @@ function submissionMailto(siteEmail: string) {
 
 const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'discover', label: 'Discover' },
+  { id: 'browse', label: 'Browse' },
   { id: 'new', label: 'New' },
   { id: 'rising', label: 'Rising' },
   { id: 'near', label: 'Near 1K' },
@@ -157,6 +158,25 @@ const NAV_ITEMS: Array<{ id: SectionId; label: string }> = [
   { id: 'data', label: 'Data' },
   { id: 'about', label: 'About' },
 ]
+
+const VIEW_IDS = new Set<SectionId>(NAV_ITEMS.map((item) => item.id))
+
+function readHashView(): SectionId {
+  if (typeof window === 'undefined') return 'discover'
+  const raw = window.location.hash.replace(/^#\/?/, '').trim()
+  const normalized = raw === 'repo-index' ? 'browse' : raw
+  return VIEW_IDS.has(normalized as SectionId) ? normalized as SectionId : 'discover'
+}
+
+function writeHashView(view: SectionId) {
+  if (typeof window === 'undefined') return
+  const next = `#/${view}`
+  if (window.location.hash === next) {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+  window.location.hash = `/${view}`
+}
 
 const STATUS_OPTIONS: Array<'all' | RepoStatus> = ['all', 'Underrated', 'Rising', 'Near 1K', 'Crossed 1K', 'Archived/Inactive']
 type SignalIconName = 'agent' | 'mcp' | 'apple' | 'cli' | 'local' | 'automation' | 'security' | 'web' | 'data' | 'repo' | 'github'
@@ -342,6 +362,7 @@ function App() {
   const [sort, setSort] = useState<SortMode>('curated')
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null)
   const [hoveredRepoId, setHoveredRepoId] = useState<string | null>(null)
+  const [activeView, setActiveView] = useState<SectionId>(() => readHashView())
 
   useEffect(() => {
     fetch(`./data/all_repos.json?v=${Date.now()}`, { cache: 'no-store' })
@@ -373,6 +394,19 @@ function App() {
 
     window.addEventListener('keydown', closeWithEscape)
     return () => window.removeEventListener('keydown', closeWithEscape)
+  }, [])
+
+  useEffect(() => {
+    function syncHashView() {
+      setActiveView(readHashView())
+      setHoveredRepoId(null)
+      setSelectedRepoId(null)
+      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+    }
+
+    syncHashView()
+    window.addEventListener('hashchange', syncHashView)
+    return () => window.removeEventListener('hashchange', syncHashView)
   }, [])
 
   const languages = useMemo(() => uniq(repos.map((repo) => repo.language || 'Unknown')), [repos])
@@ -426,14 +460,18 @@ function App() {
   }, [repos, query, language, topic, status, sort])
 
   const featured = useMemo(() => repos.filter((repo) => repo.is_gem || repo.growthScore > 35).sort((a, b) => b.growthScore - a.growthScore).slice(0, 6), [repos])
-  const newest = useMemo(() => [...repos].sort((a, b) => daysSince(a.firstSeen) - daysSince(b.firstSeen)).slice(0, 8), [repos])
+  const newestPage = useMemo(() => [...repos].sort((a, b) => daysSince(a.firstSeen) - daysSince(b.firstSeen)), [repos])
+  const newest = useMemo(() => newestPage.slice(0, 8), [newestPage])
   const communityFinds = useMemo(() => repos
     .filter((repo) => repo.wave === 'submitted' || Boolean(repo.submittedFromIssue))
     .sort((a, b) => daysSince(a.firstSeen) - daysSince(b.firstSeen))
     .slice(0, 6), [repos])
-  const rising = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Rising').sort((a, b) => b.growthScore - a.growthScore).slice(0, 8), [repos])
-  const nearOneK = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Near 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
-  const crossed = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Crossed 1K').sort((a, b) => b.stars - a.stars).slice(0, 8), [repos])
+  const risingPage = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Rising').sort((a, b) => b.growthScore - a.growthScore), [repos])
+  const nearOneKPage = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Near 1K').sort((a, b) => b.stars - a.stars), [repos])
+  const crossedPage = useMemo(() => repos.filter((repo) => repo.statusLabel === 'Crossed 1K').sort((a, b) => b.stars - a.stars), [repos])
+  const rising = useMemo(() => risingPage.slice(0, 8), [risingPage])
+  const nearOneK = useMemo(() => nearOneKPage.slice(0, 8), [nearOneKPage])
+  const crossed = useMemo(() => crossedPage.slice(0, 8), [crossedPage])
   const trendingTopics = topics.slice(0, 14)
   const repoIds = useMemo(() => new Set(repos.map((repo) => repo.id)), [repos])
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds])
@@ -447,8 +485,16 @@ function App() {
   const nextRepo = selectedBrowseIndex >= 0 && selectedBrowseIndex < visibleRepos.length - 1 ? visibleRepos[selectedBrowseIndex + 1] : null
   const relatedRepos = useMemo(() => selectedRepo ? relatedReposFor(selectedRepo, repos, 4) : [], [repos, selectedRepo])
 
+  function resetFilters() {
+    setQuery('')
+    setLanguage('all')
+    setTopic('all')
+    setStatus('all')
+    setSort('curated')
+  }
+
   function jumpToIndex() {
-    window.requestAnimationFrame(() => document.getElementById('repo-index')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+    writeHashView('browse')
   }
 
   function handlePreviewRepo(repoId: string | null) {
@@ -460,10 +506,7 @@ function App() {
   }
 
   function applyDiscoveryMode(modeId: DiscoveryModeId) {
-    setLanguage('all')
-    setTopic('all')
-    setStatus('all')
-    setQuery('')
+    resetFilters()
 
     if (modeId === 'surprise') {
       const pool = repos.length ? repos : filtered
@@ -538,52 +581,66 @@ function App() {
     window.localStorage.setItem('undrdr-mock-favorites', JSON.stringify(next))
   }
 
+  const searchPanel = (
+    <div className="search-panel" aria-label="Repository search and filters">
+      <label className="search-box">
+        <span>Search the index</span>
+        <input
+          name="repo-search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') writeHashView('browse')
+          }}
+          placeholder="repo, owner, language, topic..."
+          autoComplete="off"
+        />
+      </label>
+      <div className="filter-grid">
+        <Select label="Language" value={language} values={languages} onChange={setLanguage} />
+        <Select label="Topic" value={topic} values={topics.map(([name]) => name)} onChange={setTopic} />
+        <select value={status} onChange={(event) => setStatus(event.target.value as 'all' | RepoStatus)} aria-label="Status">
+          {STATUS_OPTIONS.map((item) => <option key={item} value={item}>{item === 'all' ? 'Status / all' : item}</option>)}
+        </select>
+        <select value={sort} onChange={(event) => setSort(event.target.value as SortMode)} aria-label="Sort">
+          <option value="curated">Sort / curated</option>
+          <option value="stars">Sort / stars</option>
+          <option value="newest">Sort / newest</option>
+          <option value="rising">Sort / rising</option>
+          <option value="updated">Sort / recently updated</option>
+          <option value="closest">Sort / closest to 1K</option>
+        </select>
+      </div>
+      <button className="search-submit" type="button" onClick={() => writeHashView('browse')}>Browse results</button>
+    </div>
+  )
+
   return (
     <main className="app-shell">
-      <a className="skip-link" href="#repo-index">Skip to Repository Index</a>
+      <a className="skip-link" href="#/browse">Skip to Repository Index</a>
       <header className="site-header">
-        <a className="wordmark" href="#discover" aria-label="UND-RDR home">
+        <a className="wordmark" href="#/discover" aria-label="UND-RDR home">
           <img className="wordmark-mark" src="./assets/undrdr-discovery-icon-bright.png" alt="" aria-hidden="true" />
           <span>UND-RDR</span>
         </a>
         <nav aria-label="Primary navigation">
-          {NAV_ITEMS.map((item) => <a key={item.id} href={`#${item.id}`}>{item.label}</a>)}
+          {NAV_ITEMS.map((item) => (
+            <a key={item.id} href={`#/${item.id}`} aria-current={activeView === item.id ? 'page' : undefined}>
+              {item.label}
+            </a>
+          ))}
         </nav>
         <AuthControl user={mockUser} favoriteCount={favoriteIds.length} onSignIn={mockSignIn} onSignOut={mockSignOut} />
       </header>
 
+      {activeView === 'discover' && (
+        <>
       <section className="hero" id="discover">
         <div className="hero-copy">
           <h1>{formatNumber(stats.total)} underrated GitHub repos.</h1>
           <p>Browse what is heating up before it gets obvious. Hover for the signal, click a card to open the repo, and keep moving from one find to the next.</p>
         </div>
-        <div className="search-panel" aria-label="Repository search and filters">
-          <label className="search-box">
-            <span>Search the index</span>
-            <input
-              name="repo-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="repo, owner, language, topic…"
-              autoComplete="off"
-            />
-          </label>
-          <div className="filter-grid">
-            <Select label="Language" value={language} values={languages} onChange={setLanguage} />
-            <Select label="Topic" value={topic} values={topics.map(([name]) => name)} onChange={setTopic} />
-            <select value={status} onChange={(event) => setStatus(event.target.value as 'all' | RepoStatus)} aria-label="Status">
-              {STATUS_OPTIONS.map((item) => <option key={item} value={item}>{item === 'all' ? 'Status / all' : item}</option>)}
-            </select>
-            <select value={sort} onChange={(event) => setSort(event.target.value as SortMode)} aria-label="Sort">
-              <option value="curated">Sort / curated</option>
-              <option value="stars">Sort / stars</option>
-              <option value="newest">Sort / newest</option>
-              <option value="rising">Sort / rising</option>
-              <option value="updated">Sort / recently updated</option>
-              <option value="closest">Sort / closest to 1K</option>
-            </select>
-          </div>
-        </div>
+        {searchPanel}
       </section>
 
       <DiscoveryModes onSelect={applyDiscoveryMode} />
@@ -624,23 +681,48 @@ function App() {
         <RepoRail id="near" title="Almost Famous" repos={nearOneK} />
         <RepoRail id="crossed" title="Graduated" repos={crossed} emptyDetail="No graduated repos are present in this snapshot yet." />
       </section>
+        </>
+      )}
 
-      <section className="topics-section" id="topics">
+      {activeView === 'browse' && (
+        <section className="index-section browse-view" id="browse" aria-label="Repository index">
+          <div className="index-heading">
+            <div>
+              <p>Live Browse</p>
+              <h2>{filtered.length} repos</h2>
+            </div>
+            <button className="reset-button" onClick={resetFilters}>Reset filters</button>
+          </div>
+          <div className="browse-search">{searchPanel}</div>
+
+          {loadState === 'loading' && <StateBlock title="Loading repo data" detail="Reading the local UND-RDR repository dataset." />}
+          {loadState === 'error' && <StateBlock title="Could not load repo data" detail="The app could not read public/data/all_repos.json. The backup copy is preserved in backups/." />}
+          {loadState === 'ready' && filtered.length === 0 && <StateBlock title="No results after filters" detail="Try a broader topic, status, or language." />}
+          {loadState === 'ready' && filtered.length > 0 && <RepoList repos={visibleRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
+        </section>
+      )}
+
+      {activeView === 'new' && <FocusedRepoSection id="new" eyebrow="New" title="Fresh Finds" detail="The newest projects added to the UND-RDR index." repos={newestPage.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
+      {activeView === 'rising' && <FocusedRepoSection id="rising" eyebrow="Rising" title="Heating Up" detail="Repos with the strongest current momentum signal." repos={risingPage.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
+      {activeView === 'near' && <FocusedRepoSection id="near" eyebrow="Near 1K" title="Almost Famous" detail="Projects close to graduating from underrated." repos={nearOneKPage.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
+      {activeView === 'crossed' && <FocusedRepoSection id="crossed" eyebrow="Crossed 1K" title="Graduated" detail="Repos that crossed the 1,000-star threshold and stayed in the archive." repos={crossedPage.slice(0, 80)} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
+
+      {activeView === 'topics' && <section className="topics-section view-section" id="topics">
         <SectionHeader eyebrow="Today" title="Trending Topics" detail="Topic density from the local repo index. Daily external trend discovery can plug in here later." />
         <div className="topic-grid">
           {trendingTopics.map(([name, count], index) => (
-            <button key={name} onClick={() => { setTopic(name); setQuery('') }} className={topic === name ? 'active' : ''}>
+            <button key={name} onClick={() => { setTopic(name); setQuery(''); setStatus('all'); setSort('curated'); writeHashView('browse') }} className={topic === name ? 'active' : ''}>
               <span>{String(index + 1).padStart(2, '0')}</span>
               <strong>{name}</strong>
               <em>{count}</em>
             </button>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <SubmitRepoSection siteConfig={SITE_CONFIG} existingRepoIds={repoIds} submissions={submissions} onClear={clearSubmissionReceipts} onSubmit={handleSubmissionReceipt} />
+      {activeView === 'submit' && <SubmitRepoSection siteConfig={SITE_CONFIG} existingRepoIds={repoIds} submissions={submissions} onClear={clearSubmissionReceipts} onSubmit={handleSubmissionReceipt} />}
 
-      <section className="favorites-section" id="favorites" aria-label="Repository watchlist">
+      {activeView === 'favorites' && <section className="favorites-section" id="favorites" aria-label="Repository watchlist">
         <div className="index-heading">
           <div>
             <p>Watchlist</p>
@@ -651,22 +733,7 @@ function App() {
         {!mockUser && <StateBlock title="Log in to save repos" detail="Your watchlist is personal, so this mock keeps it behind a local sign-in state." />}
         {mockUser && favoriteRepos.length === 0 && <StateBlock title="No saved repos yet" detail="Use the star on repo cards to build your personal watchlist." />}
         {mockUser && favoriteRepos.length > 0 && <RepoList repos={favoriteRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
-      </section>
-
-      <section className="index-section" id="repo-index" aria-label="Repository index">
-        <div className="index-heading">
-          <div>
-            <p>Live Browse</p>
-            <h2>{filtered.length} repos</h2>
-          </div>
-          <button className="reset-button" onClick={() => { setQuery(''); setLanguage('all'); setTopic('all'); setStatus('all'); setSort('curated') }}>Reset filters</button>
-        </div>
-
-        {loadState === 'loading' && <StateBlock title="Loading repo data" detail="Reading the local UND-RDR repository dataset." />}
-        {loadState === 'error' && <StateBlock title="Could not load repo data" detail="The app could not read public/data/all_repos.json. The backup copy is preserved in backups/." />}
-        {loadState === 'ready' && filtered.length === 0 && <StateBlock title="No results after filters" detail="Try a broader topic, status, or language." />}
-        {loadState === 'ready' && filtered.length > 0 && <RepoList repos={visibleRepos} favoriteIds={favoriteSet} isLoggedIn={Boolean(mockUser)} onPreviewRepo={handlePreviewRepo} onToggleFavorite={toggleFavorite} />}
-      </section>
+      </section>}
 
       {hoveredRepo && !selectedRepo && (
         <HoverPreview
@@ -691,9 +758,14 @@ function App() {
         />
       )}
 
-      <MethodSection siteConfig={SITE_CONFIG} stats={stats} report={report} duplicateCount={duplicates.length} />
+      {activeView === 'data' && (
+        <>
+          <UpdateReportPanel report={report} />
+          <MethodSection siteConfig={SITE_CONFIG} stats={stats} report={report} duplicateCount={duplicates.length} />
+        </>
+      )}
 
-      <section className="about-section" id="about">
+      {activeView === 'about' && <section className="about-section" id="about">
         <div>
           <p>About UND-RDR</p>
           <h2>UND-RDR tracks underrated GitHub projects before they become famous.</h2>
@@ -705,7 +777,7 @@ function App() {
           <Definition title="Graduated" detail="A project that crossed 1,000 stars and left the underrated zone." />
           <Definition title="Submit a repo" detail={<><a className="inline-link" href={submissionMailto(SITE_CONFIG.siteEmail)}>{SITE_CONFIG.siteEmail}</a> or use the protected Submit form.</>} />
         </div>
-      </section>
+      </section>}
     </main>
   )
 }
@@ -757,7 +829,7 @@ function AuthControl({ user, favoriteCount, onSignIn, onSignOut }: { user: MockU
 
   return (
     <div className="auth-control">
-      <a href="#favorites">{favoriteCount} saved</a>
+      <a href="#/favorites">{favoriteCount} saved</a>
       <button onClick={onSignOut}>Log out</button>
     </div>
   )
@@ -1096,6 +1168,24 @@ function RepoList({ repos, favoriteIds, isLoggedIn, onPreviewRepo, onToggleFavor
         />
       ))}
     </div>
+  )
+}
+
+function FocusedRepoSection({ id, eyebrow, title, detail, repos, favoriteIds, isLoggedIn, onPreviewRepo, onToggleFavorite }: { id: SectionId; eyebrow: string; title: string; detail: string; repos: RepoView[]; favoriteIds: Set<string>; isLoggedIn: boolean; onPreviewRepo: (repoId: string | null) => void; onToggleFavorite: (repoId: string) => void }) {
+  return (
+    <section className="index-section focused-view" id={id} aria-label={title}>
+      <div className="index-heading">
+        <div>
+          <p>{eyebrow}</p>
+          <h2>{title}</h2>
+        </div>
+        <span className="view-count">{formatNumber(repos.length)} repos</span>
+      </div>
+      <p className="view-detail">{detail}</p>
+      {repos.length
+        ? <RepoList repos={repos} favoriteIds={favoriteIds} isLoggedIn={isLoggedIn} onPreviewRepo={onPreviewRepo} onToggleFavorite={onToggleFavorite} />
+        : <StateBlock title="No repos yet" detail="This view is ready for the next dataset refresh." />}
+    </section>
   )
 }
 
