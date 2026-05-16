@@ -362,6 +362,8 @@ function App() {
   const [sort, setSort] = useState<SortMode>('curated')
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null)
   const [hoveredRepoId, setHoveredRepoId] = useState<string | null>(null)
+  const [isPreviewFading, setIsPreviewFading] = useState(false)
+  const [previewTick, setPreviewTick] = useState(0)
   const [activeView, setActiveView] = useState<SectionId>(() => readHashView())
 
   useEffect(() => {
@@ -400,6 +402,7 @@ function App() {
     function syncHashView() {
       setActiveView(readHashView())
       setHoveredRepoId(null)
+      setIsPreviewFading(false)
       setSelectedRepoId(null)
       window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
     }
@@ -408,6 +411,21 @@ function App() {
     window.addEventListener('hashchange', syncHashView)
     return () => window.removeEventListener('hashchange', syncHashView)
   }, [])
+
+  useEffect(() => {
+    if (!hoveredRepoId || selectedRepoId) return undefined
+
+    const fadeTimer = window.setTimeout(() => setIsPreviewFading(true), 3600)
+    const closeTimer = window.setTimeout(() => {
+      setHoveredRepoId(null)
+      setIsPreviewFading(false)
+    }, 4300)
+
+    return () => {
+      window.clearTimeout(fadeTimer)
+      window.clearTimeout(closeTimer)
+    }
+  }, [hoveredRepoId, selectedRepoId, previewTick])
 
   const languages = useMemo(() => uniq(repos.map((repo) => repo.language || 'Unknown')), [repos])
   const topics = useMemo(() => {
@@ -498,10 +516,14 @@ function App() {
   }
 
   function handlePreviewRepo(repoId: string | null) {
-    if (repoId) setHoveredRepoId(repoId)
+    if (!repoId) return
+    setIsPreviewFading(false)
+    setHoveredRepoId(repoId)
+    setPreviewTick((value) => value + 1)
   }
 
   function closePreview() {
+    setIsPreviewFading(false)
     setHoveredRepoId(null)
   }
 
@@ -739,6 +761,7 @@ function App() {
         <HoverPreview
           repo={hoveredRepo}
           nextRepo={hoveredNextRepo}
+          isFading={isPreviewFading}
           onClose={closePreview}
           onPreviewRepo={handlePreviewRepo}
         />
@@ -1070,18 +1093,19 @@ function DiscoveryModes({ onSelect }: { onSelect: (modeId: DiscoveryModeId) => v
   )
 }
 
-function HoverPreview({ repo, nextRepo, onClose, onPreviewRepo }: { repo: RepoView; nextRepo: RepoView | null; onClose: () => void; onPreviewRepo: (repoId: string | null) => void }) {
+function HoverPreview({ repo, nextRepo, isFading, onClose, onPreviewRepo }: { repo: RepoView; nextRepo: RepoView | null; isFading: boolean; onClose: () => void; onPreviewRepo: (repoId: string | null) => void }) {
   const iconName = repoSignalIcon(repo)
   const delta = repo.dailyStarDelta || repo.weeklyStarDelta || 0
   const topTopics = repo.allTopics.slice(0, 3)
 
   return (
     <aside
-      className="hover-preview"
+      className={`hover-preview ${isFading ? 'is-fading' : ''}`}
       style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}
       aria-label={`${repo.displayName} preview`}
       onMouseEnter={() => onPreviewRepo(repo.id)}
       onMouseLeave={() => onPreviewRepo(null)}
+      onPointerEnter={() => onPreviewRepo(repo.id)}
       onFocus={() => onPreviewRepo(repo.id)}
       onBlur={(event) => {
         const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null
@@ -1201,13 +1225,24 @@ function RepoCard({ repo, isFavorite, isLoggedIn, onPreviewRepo, onToggleFavorit
       style={{ '--status-color': statusColor(repo.statusLabel) } as CSSProperties}
       onMouseEnter={() => onPreviewRepo(repo.id)}
       onMouseLeave={() => onPreviewRepo(null)}
+      onPointerEnter={() => onPreviewRepo(repo.id)}
       onFocus={() => onPreviewRepo(repo.id)}
       onBlur={(event) => {
         const nextTarget = event.relatedTarget instanceof Node ? event.relatedTarget : null
         if (!event.currentTarget.contains(nextTarget)) onPreviewRepo(null)
       }}
     >
-      <a className="card-open-link" href={repo.repoUrl} target="_blank" rel="noreferrer" aria-label={repoOpenLabel} title={`Open ${repo.displayName} on GitHub`} />
+      <a
+        className="card-open-link"
+        href={repo.repoUrl}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={repoOpenLabel}
+        title={`Open ${repo.displayName} on GitHub`}
+        onMouseEnter={() => onPreviewRepo(repo.id)}
+        onPointerEnter={() => onPreviewRepo(repo.id)}
+        onFocus={() => onPreviewRepo(repo.id)}
+      />
       <div className="card-topline">
         <span className="status-badge">{!compact && <SignalIcon name={iconName} />}{statusDisplayLabel(repo.statusLabel)}</span>
         <span className="card-actions">
