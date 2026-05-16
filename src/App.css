@@ -2218,6 +2218,29 @@ textarea {
     padding-right: 18px;
   }
 
+  .hero,
+  .discovery-modes,
+  .metrics,
+  .signal-system,
+  .update-report,
+  .section-header,
+  .repo-grid,
+  .split-sections,
+  .topics-section,
+  .submit-section,
+  .favorites-section,
+  .index-section,
+  .method-section,
+  .about-section {
+    width: 100%;
+  }
+
+  .index-section .repo-list,
+  .favorites-section .repo-list {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .repo-grid .repo-card {
     min-height: 0;
     padding: 14px;
@@ -2365,5 +2388,191 @@ textarea {
   .report-column,
   .report-issues {
     flex-basis: 236px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 900px) {
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  .site-header {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    padding-inline: 26px;
+    padding-top: 10px;
+    padding-bottom: 0;
+  }
+
+  .site-header nav {
+    order: 3;
+    flex: 0 0 calc(100% + 52px);
+    width: calc(100% + 52px);
+    margin-inline: -26px;
+    padding: 0 26px 9px;
+    border-top: 1px solid rgba(17, 19, 18, 0.08);
+  }
+
+  .auth-control {
+    margin-left: auto;
+  }
+
+  .hero {
+    order: 1;
+    padding: 26px 26px 14px;
+    grid-template-columns: minmax(0, 0.78fr) minmax(340px, 1fr);
+    align-items: end;
+    gap: 18px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(36px, 5.7vw, 44px);
+    line-height: 1.03;
+    text-wrap: balance;
+  }
+
+  .search-panel {
+    padding: 13px;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 42px;
+  }
+
+  .discovery-modes {
+    order: 2;
+    padding-inline: 26px;
+  }
+
+  .discovery-modes > div:first-child {
+    margin-inline: 0;
+  }
+
+  .mode-buttons {
+    padding-inline: 0;
+  }
+
+  .mode-buttons button {
+    min-height: 38px;
+  }
+
+  .index-section,
+  .favorites-section,
+  .repo-grid,
+  .split-sections,
+  .topic-section,
+  .submit-section,
+  .method-section,
+  .about-section {
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+
+  .index-section,
+  .favorites-section,
+  .repo-grid,
+  .split-sections,
+  .topic-section,
+  .submit-section,
+  .method-section,
+  .about-section {
+    width: 100%;
+  }
+
+  .index-section .repo-list,
+  .favorites-section .repo-list {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .index-section {
+    order: 3;
+    margin-top: 12px;
+  }
+
+  .favorites-section {
+    order: 4;
+  }
+
+  .metrics {
+    order: 7;
+  }
+
+  .status-banner {
+    order: 8;
+  }
+
+  .update-report {
+    order: 9;
+  }
+
+  .signal-system {
+    order: 10;
+  }
+
+  .section-header {
+    order: 11;
+  }
+
+  .repo-grid {
+    order: 12;
+  }
+
+  .split-sections {
+    order: 13;
+  }
+
+  .topics-section {
+    order: 14;
+  }
+
+  .submit-section {
+    order: 15;
+  }
+
+  .method-section {
+    order: 16;
+  }
+
+  .about-section {
+    order: 17;
+  }
+
+  .index-heading {
+    margin-bottom: 12px;
+  }
+
+  .index-section .index-heading h2 {
+    font-size: clamp(34px, 5vw, 44px);
+  }
+
+  .repo-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .repo-list .repo-card.compact {
+    padding: 14px;
+    min-height: 132px;
+    contain-intrinsic-size: 132px;
+  }
+
+  .repo-list .repo-title {
+    font-size: 18px;
+  }
+
+  .repo-list .repo-owner {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .repo-list .card-footer {
+    padding-top: 14px;
   }
 }
