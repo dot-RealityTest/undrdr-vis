@@ -2355,6 +2355,7 @@ textarea {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
+    column-gap: 12px;
   }
 
   .index-section .index-heading p {
@@ -2363,11 +2364,14 @@ textarea {
 
   .index-section .index-heading h2 {
     margin-top: 4px;
-    font-size: clamp(28px, 8vw, 34px);
+    font-size: clamp(31px, 8vw, 38px);
+    line-height: 0.98;
+    white-space: nowrap;
   }
 
   .reset-button {
     min-height: 38px;
+    padding: 0 12px;
   }
 }
 

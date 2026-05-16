@@ -626,7 +626,7 @@ function App() {
         <div className="index-heading">
           <div>
             <p>Live Browse</p>
-            <h2>{filtered.length} repositories</h2>
+            <h2>{filtered.length} repos</h2>
           </div>
           <button className="reset-button" onClick={() => { setQuery(''); setLanguage('all'); setTopic('all'); setStatus('all'); setSort('curated') }}>Reset filters</button>
         </div>
