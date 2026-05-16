@@ -550,6 +550,18 @@
     letter-spacing: 0;
   }
   .detail-readme-body p { margin-bottom: 12px; }
+  .readme-original {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+  .readme-status {
+    color: var(--muted);
+  }
   .detail-readme-body code {
     font-family: var(--mono);
     font-size: 12px;

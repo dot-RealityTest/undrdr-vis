@@ -84,6 +84,7 @@ type SubmitResponse = {
 }
 
 const SITE_EMAIL = import.meta.env.VITE_SITE_EMAIL || 'submit@undrdr.com'
+const readmeCache = new Map<string, string>()
 
 function formatNumber(value = 0) {
   if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
@@ -558,12 +559,7 @@ function DetailOverlay({ repo, previousRepo, nextRepo, relatedRepos, isOpen, isL
 
           <div className="detail-readme">
             <div className="detail-readme-header"><BookIcon /> README.md</div>
-            <div className="detail-readme-body">
-              <h3>{repo.repoName}</h3>
-              <p>{repo.description || 'No description available yet.'}</p>
-              <p>{repo.submittedReason || repo.license || 'Open the GitHub repository to inspect README, releases, issues, and project fit.'}</p>
-              <p><code>{repo.ownerName}/{repo.repoName}</code></p>
-            </div>
+            <ReadmePreview key={repo.id} repo={repo} />
           </div>
 
           <div className="detail-actions">
@@ -604,6 +600,96 @@ function NextCard({ repo, onSelect }: { repo: RepoView; onSelect: (id: string) =
       </div>
     </div>
   )
+}
+
+function ReadmePreview({ repo }: { repo: RepoView }) {
+  const [readme, setReadme] = useState<string | null>(() => readmeCache.get(repo.id) || null)
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>(() => readmeCache.has(repo.id) ? 'ready' : 'loading')
+
+  useEffect(() => {
+    const cached = readmeCache.get(repo.id)
+    if (cached) {
+      return undefined
+    }
+
+    const controller = new AbortController()
+
+    fetch(`https://api.github.com/repos/${repo.ownerName}/${repo.repoName}/readme`, {
+      signal: controller.signal,
+      headers: { accept: 'application/vnd.github+json' },
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`README ${response.status}`)
+        return response.json() as Promise<{ content?: string; encoding?: string }>
+      })
+      .then((data) => {
+        if (!data.content) throw new Error('README is empty')
+        const decoded = decodeGitHubContent(data.content)
+        readmeCache.set(repo.id, decoded)
+        setReadme(decoded)
+        setState('ready')
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        setState('error')
+      })
+
+    return () => controller.abort()
+  }, [repo.id, repo.ownerName, repo.repoName])
+
+  if (state === 'loading') {
+    return <div className="detail-readme-body"><p className="readme-status">Loading original README from GitHub...</p></div>
+  }
+
+  if (state === 'error' || !readme) {
+    return (
+      <div className="detail-readme-body">
+        <p className="readme-status">Original README preview is unavailable from GitHub right now.</p>
+        <p><code>{repo.ownerName}/{repo.repoName}</code></p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="detail-readme-body">
+      <pre className="readme-original">{readmePreview(readme, repo.repoName)}</pre>
+    </div>
+  )
+}
+
+function decodeGitHubContent(content: string) {
+  const clean = content.replace(/\s/g, '')
+  const binary = window.atob(clean)
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
+}
+
+function readmePreview(readme: string, repoName: string) {
+  let cleaned = readme
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<img\b[^>]*>/gi, '')
+    .replace(/<\/?p\b[^>]*>/gi, '')
+    .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+    .replace(/<b\b[^>]*>([\s\S]*?)<\/b>/gi, '$1')
+    .replace(/<strong\b[^>]*>([\s\S]*?)<\/strong>/gi, '$1')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?[^>]+>/g, '')
+    .replace(/\n{4,}/g, '\n\n\n')
+    .trim()
+
+  const lines = cleaned.split('\n')
+  const headingIndex = lines.findIndex((line, index) => {
+    if (index > 40) return false
+    const normalized = line.replace(/^#+\s*/, '').trim().toLowerCase()
+    return normalized === repoName.toLowerCase()
+  })
+
+  if (headingIndex > 0) {
+    cleaned = lines.slice(headingIndex).join('\n').trim()
+  }
+
+  if (cleaned.length <= 2200) return cleaned
+  return `${cleaned.slice(0, 2200).trimEnd()}\n\n...`
 }
 
 function CollectionsPage({ repos, onPick }: { repos: RepoView[]; onPick: (term: string) => void }) {
