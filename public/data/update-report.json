@@ -1,14 +1,14 @@
 {
-  "checkedAt": "2026-05-15T23:15:22.695Z",
+  "checkedAt": "2026-05-17T07:44:59.371Z",
   "source": "public/data/all_repos.json",
-  "checkedCount": 683,
-  "totalRepos": 683,
+  "checkedCount": 684,
+  "totalRepos": 684,
   "statusCounts": {
-    "Rising": 236,
-    "Underrated": 401,
+    "Rising": 239,
+    "Underrated": 398,
     "Archived/Inactive": 11,
     "Crossed 1K": 23,
-    "Near 1K": 12
+    "Near 1K": 13
   },
   "failures": [
     {
@@ -54,10 +54,10 @@
     {
       "full_name": "Jaysce/Spaceman",
       "url": "https://github.com/Jaysce/Spaceman",
-      "stars": 966,
+      "stars": 967,
       "previousStars": 966,
-      "dailyStarDelta": 0,
-      "weeklyStarDelta": 9,
+      "dailyStarDelta": 1,
+      "weeklyStarDelta": 10,
       "status": "Near 1K"
     },
     {
@@ -79,6 +79,15 @@
       "status": "Near 1K"
     },
     {
+      "full_name": "Agents365-ai/video-podcast-maker",
+      "url": "https://github.com/Agents365-ai/video-podcast-maker",
+      "stars": 945,
+      "previousStars": 917,
+      "dailyStarDelta": 28,
+      "weeklyStarDelta": 506,
+      "status": "Near 1K"
+    },
+    {
       "full_name": "raskrebs/sonar",
       "url": "https://github.com/raskrebs/sonar",
       "stars": 942,
@@ -88,57 +97,57 @@
       "status": "Near 1K"
     },
     {
-      "full_name": "madsmtm/objc2",
-      "url": "https://github.com/madsmtm/objc2",
-      "stars": 934,
-      "previousStars": 932,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 40,
+      "full_name": "louiszengCN/CarlaAir",
+      "url": "https://github.com/louiszengCN/CarlaAir",
+      "stars": 939,
+      "previousStars": 933,
+      "dailyStarDelta": 6,
+      "weeklyStarDelta": 484,
       "status": "Near 1K"
     },
     {
-      "full_name": "louiszengCN/CarlaAir",
-      "url": "https://github.com/louiszengCN/CarlaAir",
-      "stars": 933,
-      "previousStars": 930,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 478,
+      "full_name": "madsmtm/objc2",
+      "url": "https://github.com/madsmtm/objc2",
+      "stars": 936,
+      "previousStars": 934,
+      "dailyStarDelta": 2,
+      "weeklyStarDelta": 42,
       "status": "Near 1K"
     },
     {
       "full_name": "777genius/claude_agent_teams_ui",
       "url": "https://github.com/777genius/agent-teams-ai",
-      "stars": 924,
-      "previousStars": 922,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 343,
+      "stars": 935,
+      "previousStars": 924,
+      "dailyStarDelta": 11,
+      "weeklyStarDelta": 354,
+      "status": "Near 1K"
+    },
+    {
+      "full_name": "ogulcancelik/herdr",
+      "url": "https://github.com/ogulcancelik/herdr",
+      "stars": 921,
+      "previousStars": 780,
+      "dailyStarDelta": 141,
+      "weeklyStarDelta": 687,
       "status": "Near 1K"
     },
     {
       "full_name": "Shpigford/clearly",
       "url": "https://github.com/Shpigford/clearly",
-      "stars": 917,
-      "previousStars": 916,
-      "dailyStarDelta": 1,
-      "weeklyStarDelta": 417,
-      "status": "Near 1K"
-    },
-    {
-      "full_name": "Agents365-ai/video-podcast-maker",
-      "url": "https://github.com/Agents365-ai/video-podcast-maker",
-      "stars": 917,
-      "previousStars": 908,
-      "dailyStarDelta": 9,
-      "weeklyStarDelta": 478,
+      "stars": 919,
+      "previousStars": 917,
+      "dailyStarDelta": 2,
+      "weeklyStarDelta": 419,
       "status": "Near 1K"
     },
     {
       "full_name": "patoles/agent-flow",
       "url": "https://github.com/patoles/agent-flow",
-      "stars": 916,
-      "previousStars": 915,
+      "stars": 917,
+      "previousStars": 916,
       "dailyStarDelta": 1,
-      "weeklyStarDelta": 254,
+      "weeklyStarDelta": 255,
       "status": "Near 1K"
     },
     {
@@ -153,228 +162,228 @@
   ],
   "rising": [
     {
+      "full_name": "mnemon-dev/mnemon",
+      "url": "https://github.com/mnemon-dev/mnemon",
+      "stars": 187,
+      "previousStars": 141,
+      "dailyStarDelta": 46,
+      "weeklyStarDelta": 153,
+      "status": "Rising"
+    },
+    {
+      "full_name": "he-yufeng/CoreCoder",
+      "url": "https://github.com/he-yufeng/CoreCoder",
+      "stars": 738,
+      "previousStars": 700,
+      "dailyStarDelta": 38,
+      "weeklyStarDelta": 224,
+      "status": "Rising"
+    },
+    {
       "full_name": "Agentshire/Agentshire",
       "url": "https://github.com/Agentshire/Agentshire",
-      "stars": 699,
-      "previousStars": 690,
-      "dailyStarDelta": 9,
-      "weeklyStarDelta": 623,
-      "status": "Rising"
-    },
-    {
-      "full_name": "sonichi/sutando",
-      "url": "https://github.com/sonichi/sutando",
-      "stars": 190,
-      "previousStars": 184,
-      "dailyStarDelta": 6,
-      "weeklyStarDelta": 76,
-      "status": "Rising"
-    },
-    {
-      "full_name": "transmute-app/transmute",
-      "url": "https://github.com/transmute-app/transmute",
-      "stars": 725,
-      "previousStars": 720,
-      "dailyStarDelta": 5,
-      "weeklyStarDelta": 323,
-      "status": "Rising"
-    },
-    {
-      "full_name": "Team-Commonly/commonly",
-      "url": "https://github.com/Team-Commonly/commonly",
-      "stars": 522,
-      "previousStars": 517,
-      "dailyStarDelta": 5,
-      "weeklyStarDelta": 445,
-      "status": "Rising"
-    },
-    {
-      "full_name": "AThevon/TokenEater",
-      "url": "https://github.com/AThevon/TokenEater",
-      "stars": 296,
-      "previousStars": 292,
-      "dailyStarDelta": 4,
-      "weeklyStarDelta": 70,
-      "status": "Rising"
-    },
-    {
-      "full_name": "PwnKit-Labs/foxguard",
-      "url": "https://github.com/0sec-labs/foxguard",
-      "stars": 243,
-      "previousStars": 239,
-      "dailyStarDelta": 4,
-      "weeklyStarDelta": 30,
-      "status": "Rising"
-    },
-    {
-      "full_name": "ogulcancelik/herdr",
-      "url": "https://github.com/ogulcancelik/herdr",
-      "stars": 780,
-      "previousStars": 776,
-      "dailyStarDelta": 4,
-      "weeklyStarDelta": 546,
-      "status": "Rising"
-    },
-    {
-      "full_name": "PurpleDoubleD/locally-uncensored",
-      "url": "https://github.com/PurpleDoubleD/locally-uncensored",
-      "stars": 456,
-      "previousStars": 453,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 377,
-      "status": "Rising"
-    },
-    {
-      "full_name": "cclank/Hermes-Wiki",
-      "url": "https://github.com/cclank/Hermes-Wiki",
-      "stars": 428,
-      "previousStars": 425,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 334,
-      "status": "Rising"
-    },
-    {
-      "full_name": "soniqo/speech-swift",
-      "url": "https://github.com/soniqo/speech-swift",
-      "stars": 725,
-      "previousStars": 722,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 117,
-      "status": "Rising"
-    },
-    {
-      "full_name": "CyberStrikeus/CyberStrike",
-      "url": "https://github.com/CyberStrikeus/CyberStrike",
-      "stars": 272,
-      "previousStars": 269,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 100,
-      "status": "Rising"
-    },
-    {
-      "full_name": "bitwize-music-studio/claude-ai-music-skills",
-      "url": "https://github.com/bitwize-music-studio/claude-ai-music-skills",
-      "stars": 185,
-      "previousStars": 182,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 90,
-      "status": "Rising"
-    },
-    {
-      "full_name": "srothgan/claude-code-rust",
-      "url": "https://github.com/srothgan/claude-code-rust",
-      "stars": 136,
-      "previousStars": 133,
-      "dailyStarDelta": 3,
-      "weeklyStarDelta": 55,
-      "status": "Rising"
-    },
-    {
-      "full_name": "Ar9av/PaperOrchestra",
-      "url": "https://github.com/Ar9av/PaperOrchestra",
-      "stars": 481,
-      "previousStars": 479,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 399,
-      "status": "Rising"
-    },
-    {
-      "full_name": "ReflexioAI/reflexio",
-      "url": "https://github.com/ReflexioAI/reflexio",
-      "stars": 164,
-      "previousStars": 162,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 124,
-      "status": "Rising"
-    },
-    {
-      "full_name": "hueyexe/opencode-ensemble",
-      "url": "https://github.com/hueyexe/opencode-ensemble",
-      "stars": 104,
-      "previousStars": 102,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 71,
-      "status": "Rising"
-    },
-    {
-      "full_name": "AJenbo/phpantom_lsp",
-      "url": "https://github.com/AJenbo/phpantom_lsp",
-      "stars": 712,
-      "previousStars": 710,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 194,
-      "status": "Rising"
-    },
-    {
-      "full_name": "bergside/typeui",
-      "url": "https://github.com/bergside/typeui",
-      "stars": 889,
-      "previousStars": 887,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 430,
-      "status": "Rising"
-    },
-    {
-      "full_name": "watzon/pindrop",
-      "url": "https://github.com/watzon/pindrop",
-      "stars": 501,
-      "previousStars": 499,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 74,
-      "status": "Rising"
-    },
-    {
-      "full_name": "LiuMengxuan04/MiniCode",
-      "url": "https://github.com/LiuMengxuan04/MiniCode",
-      "stars": 600,
-      "previousStars": 598,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 214,
-      "status": "Rising"
-    },
-    {
-      "full_name": "MasuRii/pi-rtk-optimizer",
-      "url": "https://github.com/MasuRii/pi-rtk-optimizer",
-      "stars": 99,
-      "previousStars": 97,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 75,
-      "status": "Rising"
-    },
-    {
-      "full_name": "floatpane/matcha",
-      "url": "https://github.com/floatpane/matcha",
-      "stars": 728,
-      "previousStars": 726,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 507,
+      "stars": 726,
+      "previousStars": 699,
+      "dailyStarDelta": 27,
+      "weeklyStarDelta": 650,
       "status": "Rising"
     },
     {
       "full_name": "framersai/agentos",
       "url": "https://github.com/framersai/agentos",
-      "stars": 337,
-      "previousStars": 335,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 263,
+      "stars": 358,
+      "previousStars": 337,
+      "dailyStarDelta": 21,
+      "weeklyStarDelta": 284,
       "status": "Rising"
     },
     {
-      "full_name": "tobi/AudioPriorityBar",
-      "url": "https://github.com/tobi/AudioPriorityBar",
-      "stars": 657,
-      "previousStars": 655,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 20,
+      "full_name": "AJenbo/phpantom_lsp",
+      "url": "https://github.com/AJenbo/phpantom_lsp",
+      "stars": 731,
+      "previousStars": 712,
+      "dailyStarDelta": 19,
+      "weeklyStarDelta": 213,
       "status": "Rising"
     },
     {
-      "full_name": "rohanrhu/MacsyZones",
-      "url": "https://github.com/rohanrhu/MacsyZones",
-      "stars": 811,
-      "previousStars": 809,
-      "dailyStarDelta": 2,
-      "weeklyStarDelta": 20,
+      "full_name": "Team-Commonly/commonly",
+      "url": "https://github.com/Team-Commonly/commonly",
+      "stars": 541,
+      "previousStars": 522,
+      "dailyStarDelta": 19,
+      "weeklyStarDelta": 464,
+      "status": "Rising"
+    },
+    {
+      "full_name": "sonichi/sutando",
+      "url": "https://github.com/sonichi/sutando",
+      "stars": 207,
+      "previousStars": 190,
+      "dailyStarDelta": 17,
+      "weeklyStarDelta": 93,
+      "status": "Rising"
+    },
+    {
+      "full_name": "reacher-z/ClawBench",
+      "url": "https://github.com/reacher-z/ClawBench",
+      "stars": 289,
+      "previousStars": 273,
+      "dailyStarDelta": 16,
+      "weeklyStarDelta": 251,
+      "status": "Rising"
+    },
+    {
+      "full_name": "LiuMengxuan04/MiniCode",
+      "url": "https://github.com/LiuMengxuan04/MiniCode",
+      "stars": 616,
+      "previousStars": 600,
+      "dailyStarDelta": 16,
+      "weeklyStarDelta": 230,
+      "status": "Rising"
+    },
+    {
+      "full_name": "cortexkit/opencode-magic-context",
+      "url": "https://github.com/cortexkit/magic-context",
+      "stars": 630,
+      "previousStars": 615,
+      "dailyStarDelta": 15,
+      "weeklyStarDelta": 473,
+      "status": "Rising"
+    },
+    {
+      "full_name": "transmute-app/transmute",
+      "url": "https://github.com/transmute-app/transmute",
+      "stars": 736,
+      "previousStars": 725,
+      "dailyStarDelta": 11,
+      "weeklyStarDelta": 334,
+      "status": "Rising"
+    },
+    {
+      "full_name": "PurpleDoubleD/locally-uncensored",
+      "url": "https://github.com/PurpleDoubleD/locally-uncensored",
+      "stars": 466,
+      "previousStars": 456,
+      "dailyStarDelta": 10,
+      "weeklyStarDelta": 387,
+      "status": "Rising"
+    },
+    {
+      "full_name": "AaronWong1999/hermesclaw",
+      "url": "https://github.com/AaronWong1999/hermesclaw",
+      "stars": 498,
+      "previousStars": 488,
+      "dailyStarDelta": 10,
+      "weeklyStarDelta": 462,
+      "status": "Rising"
+    },
+    {
+      "full_name": "boratanrikulu/gecit",
+      "url": "https://github.com/boratanrikulu/gecit",
+      "stars": 293,
+      "previousStars": 284,
+      "dailyStarDelta": 9,
+      "weeklyStarDelta": 115,
+      "status": "Rising"
+    },
+    {
+      "full_name": "pptt3300/ui-fx-kit",
+      "url": "https://github.com/pptt3300/ui-fx-kit",
+      "stars": 47,
+      "previousStars": 38,
+      "dailyStarDelta": 9,
+      "weeklyStarDelta": 4,
+      "status": "Rising"
+    },
+    {
+      "full_name": "ReflexioAI/reflexio",
+      "url": "https://github.com/ReflexioAI/reflexio",
+      "stars": 172,
+      "previousStars": 164,
+      "dailyStarDelta": 8,
+      "weeklyStarDelta": 132,
+      "status": "Rising"
+    },
+    {
+      "full_name": "Ar9av/PaperOrchestra",
+      "url": "https://github.com/Ar9av/PaperOrchestra",
+      "stars": 488,
+      "previousStars": 481,
+      "dailyStarDelta": 7,
+      "weeklyStarDelta": 406,
+      "status": "Rising"
+    },
+    {
+      "full_name": "pyrate-llama/hermes-ui",
+      "url": "https://github.com/pyrate-llama/hermes-ui",
+      "stars": 129,
+      "previousStars": 122,
+      "dailyStarDelta": 7,
+      "weeklyStarDelta": 113,
+      "status": "Rising"
+    },
+    {
+      "full_name": "Open-ACP/OpenACP",
+      "url": "https://github.com/Open-ACP/OpenACP",
+      "stars": 375,
+      "previousStars": 369,
+      "dailyStarDelta": 6,
+      "weeklyStarDelta": 301,
+      "status": "Rising"
+    },
+    {
+      "full_name": "russelleNVy/three-man-team",
+      "url": "https://github.com/russelleNVy/three-man-team",
+      "stars": 770,
+      "previousStars": 764,
+      "dailyStarDelta": 6,
+      "weeklyStarDelta": 252,
+      "status": "Rising"
+    },
+    {
+      "full_name": "bergside/typeui",
+      "url": "https://github.com/bergside/typeui",
+      "stars": 895,
+      "previousStars": 889,
+      "dailyStarDelta": 6,
+      "weeklyStarDelta": 436,
+      "status": "Rising"
+    },
+    {
+      "full_name": "swarmclawai/swarmclaw",
+      "url": "https://github.com/swarmclawai/swarmclaw",
+      "stars": 488,
+      "previousStars": 482,
+      "dailyStarDelta": 6,
+      "weeklyStarDelta": 156,
+      "status": "Rising"
+    },
+    {
+      "full_name": "xuanyustudio/LocalMiniDrama",
+      "url": "https://github.com/xuanyustudio/LocalMiniDrama",
+      "stars": 384,
+      "previousStars": 378,
+      "dailyStarDelta": 6,
+      "weeklyStarDelta": 239,
+      "status": "Rising"
+    },
+    {
+      "full_name": "cclank/Hermes-Wiki",
+      "url": "https://github.com/cclank/Hermes-Wiki",
+      "stars": 433,
+      "previousStars": 428,
+      "dailyStarDelta": 5,
+      "weeklyStarDelta": 339,
+      "status": "Rising"
+    },
+    {
+      "full_name": "opensesh/KARIMO",
+      "url": "https://github.com/opensesh/KARIMO",
+      "stars": 182,
+      "previousStars": 177,
+      "dailyStarDelta": 5,
+      "weeklyStarDelta": 154,
       "status": "Rising"
     }
   ],
